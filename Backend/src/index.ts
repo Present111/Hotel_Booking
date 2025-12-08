@@ -10,6 +10,10 @@ import mongoose from "mongoose";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
 import authRoutes from "./routes/auth";
+import bookingsRoutes from "./routes/bookings";
+import bussinessInsightsRoutes from "./routes/business-insights";
+import healthRoutes from "./routes/health";
+import hotelRoutes from "./routes/hotels";
 import userRoutes from "./routes/users";
 import { specs } from "./swagger";
 
@@ -142,6 +146,10 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/bookings", bookingsRoutes);
+app.use("/api/business-insights", bussinessInsightsRoutes);
+app.use("/api/health", healthRoutes);
+app.use("/api/hotels", hotelRoutes);
 
 // Swagger API Documentation
 app.use(
