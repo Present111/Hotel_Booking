@@ -13,7 +13,11 @@ import authRoutes from "./routes/auth";
 import bookingsRoutes from "./routes/bookings";
 import bussinessInsightsRoutes from "./routes/business-insights";
 import healthRoutes from "./routes/health";
-import hotelRoutes from "./routes/hotels";
+import {
+  default as hotelRoutes,
+  default as myhotelRoutes,
+} from "./routes/hotels";
+import mybookingsRoutes from "./routes/my-bookings";
 import userRoutes from "./routes/users";
 import { specs } from "./swagger";
 
@@ -150,6 +154,8 @@ app.use("/api/bookings", bookingsRoutes);
 app.use("/api/business-insights", bussinessInsightsRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/my-bookings", mybookingsRoutes);
+app.use("/api/my-hotels", myhotelRoutes);
 
 // Swagger API Documentation
 app.use(
