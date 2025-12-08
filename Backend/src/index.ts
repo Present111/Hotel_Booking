@@ -14,6 +14,7 @@ import bookingsRoutes from "./routes/bookings";
 import bussinessInsightsRoutes from "./routes/business-insights";
 import healthRoutes from "./routes/health";
 import hotelRoutes from "./routes/hotels";
+import mybookingsRoutes from "./routes/my-bookings";
 import userRoutes from "./routes/users";
 import { specs } from "./swagger";
 
@@ -150,6 +151,7 @@ app.use("/api/bookings", bookingsRoutes);
 app.use("/api/business-insights", bussinessInsightsRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/my-bookings", mybookingsRoutes);
 
 // Swagger API Documentation
 app.use(
