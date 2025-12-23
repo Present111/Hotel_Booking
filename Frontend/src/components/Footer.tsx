@@ -1,53 +1,55 @@
 import {
-  Building2,
-  Mail,
-  Phone,
-  MapPin,
+  BedDouble,
   Facebook,
-  Twitter,
   Instagram,
   Linkedin,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
 } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-primary-800 to-primary-900 text-white">
+    <footer className="bg-gradient-to-r from-white via-primary-50 to-white text-primary-900 border-t border-primary-100">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <div className="bg-white p-2 rounded-lg">
-                <Building2 className="w-6 h-6 text-primary-600" />
+              <div className="bg-primary-50 p-2 rounded-lg shadow-soft">
+                <BedDouble className="w-6 h-6 text-primary-700" />
               </div>
-              <span className="text-2xl font-bold">MernHolidays</span>
+              <span className="text-2xl font-bold text-primary-800">
+                Hotel Booking
+              </span>
             </div>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-primary-700 leading-relaxed">
               Discover amazing hotels, resorts, and accommodations worldwide.
               Book with confidence and enjoy unforgettable experiences.
             </p>
             <div className="flex space-x-4">
               <a
                 href="#"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-primary-500 hover:text-primary-700 transition-colors"
               >
                 <Facebook className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-primary-500 hover:text-primary-700 transition-colors"
               >
                 <Twitter className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-primary-500 hover:text-primary-700 transition-colors"
               >
                 <Instagram className="w-5 h-5" />
               </a>
               <a
                 href="#"
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-primary-500 hover:text-primary-700 transition-colors"
               >
                 <Linkedin className="w-5 h-5" />
               </a>
@@ -61,7 +63,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Home
                 </a>
@@ -69,7 +71,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Hotels
                 </a>
@@ -77,7 +79,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Destinations
                 </a>
@@ -85,7 +87,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   About Us
                 </a>
@@ -93,7 +95,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Contact
                 </a>
@@ -108,7 +110,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Help Center
                 </a>
@@ -116,7 +118,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Booking Guide
                 </a>
@@ -124,7 +126,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Cancellation Policy
                 </a>
@@ -132,7 +134,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Privacy Policy
                 </a>
@@ -140,7 +142,7 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Terms of Service
                 </a>
@@ -153,44 +155,42 @@ const Footer = () => {
             <h3 className="text-lg font-semibold">Contact Us</h3>
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
-                <Mail className="w-5 h-5 text-primary-300" />
-                <span className="text-gray-300">support@mernholidays.com</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="w-5 h-5 text-primary-300" />
-                <span className="text-gray-300">+1 (555) 123-4567</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-5 h-5 text-primary-300" />
-                <span className="text-gray-300">
-                  123 Travel St, Tourism City
+                <Mail className="w-5 h-5 text-primary-500" />
+                <span className="text-primary-700">
+                  contengikhong123@gmail.com
                 </span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Phone className="w-5 h-5 text-primary-500" />
+                <span className="text-primary-700">+84 889378933</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <MapPin className="w-5 h-5 text-primary-500" />
+                <span className="text-primary-700">Hồ Chí Minh, Việt Nam</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-300 text-sm">
-            © 2025 MernHolidays. All rights reserved.
-          </p>
+        <div className="border-t border-primary-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-primary-700 text-sm">© All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a
               href="#"
-              className="text-gray-300 hover:text-white text-sm transition-colors"
+              className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Privacy Policy
             </a>
             <a
               href="#"
-              className="text-gray-300 hover:text-white text-sm transition-colors"
+              className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Terms of Service
             </a>
             <a
               href="#"
-              className="text-gray-300 hover:text-white text-sm transition-colors"
+              className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Cookie Policy
             </a>
