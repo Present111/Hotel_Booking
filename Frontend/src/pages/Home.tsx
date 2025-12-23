@@ -12,7 +12,6 @@ const Home = () => {
   const handleSearch = (searchData: any) => {
     console.log("Search initiated with:", searchData);
   };
-
   return (
     <>
       <Hero onSearch={handleSearch} />
@@ -27,7 +26,6 @@ const Home = () => {
               Most recent destinations added by our hosts
             </p>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {hotels?.map((hotel) => (
               <LatestDestinationCard key={hotel._id} hotel={hotel} />
