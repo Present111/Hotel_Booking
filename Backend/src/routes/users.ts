@@ -134,11 +134,15 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
-      user = new User(req.body);
+      // Ensure clients cannot elevate privileges during sign-up
+      user = new User({
+        ...req.body,
+        role: "user",
+      });
       await user.save();
 
       const token = jwt.sign(
-        { userId: user.id },
+        { userId: user.id, role: user.role || "user" },
         jwtSecret,
         {
           expiresIn: "1d",
@@ -152,7 +156,19 @@ router.post(
         maxAge: 86400000,
         path: "/",
       });
-      return res.status(200).send({ message: "User registered OK" });
+      res.cookie("session_id", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 86400000,
+        path: "/",
+      });
+      return res.status(200).send({
+        message: "User registered OK",
+        userId: user._id,
+        role: user.role || "user",
+        token,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Something went wrong" });

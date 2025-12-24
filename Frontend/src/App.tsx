@@ -24,7 +24,10 @@ import Search from "./pages/Search";
 import SignIn from "./pages/SignIn";
 
 const App = () => {
-  const { isLoggedIn } = useAppContext();
+  const { isLoggedIn, currentUser } = useAppContext();
+  const isAdmin = currentUser?.role === "admin";
+  const isOwnerOrAdmin =
+    currentUser?.role === "hotel_owner" || currentUser?.role === "admin";
   return (
     <Router>
       <ScrollToTop />
@@ -72,9 +75,13 @@ const App = () => {
         <Route
           path="/analytics"
           element={
-            <Layout>
-              <AnalyticsDashboard />
-            </Layout>
+            isLoggedIn && isAdmin ? (
+              <Layout>
+                <AnalyticsDashboard />
+              </Layout>
+            ) : (
+              <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
+            )
           }
         />
         <Route
@@ -94,51 +101,67 @@ const App = () => {
           }
         />
 
-        {isLoggedIn && (
-          <>
-            <Route
-              path="/hotel/:hotelId/booking"
-              element={
-                <Layout>
-                  <Booking />
-                </Layout>
-              }
-            />
+        <Route
+          path="/hotel/:hotelId/booking"
+          element={
+            isLoggedIn ? (
+              <Layout>
+                <Booking />
+              </Layout>
+            ) : (
+              <Navigate to="/sign-in" replace />
+            )
+          }
+        />
 
-            <Route
-              path="/add-hotel"
-              element={
-                <Layout>
-                  <AddHotel />
-                </Layout>
-              }
-            />
-            <Route
-              path="/edit-hotel/:hotelId"
-              element={
-                <Layout>
-                  <EditHotel />
-                </Layout>
-              }
-            />
-            <Route
-              path="/my-hotels"
-              element={
-                <Layout>
-                  <MyHotels />
-                </Layout>
-              }
-            />
-            <Route
-              path="/my-bookings"
-              element={
-                <Layout>
-                  <MyBookings />
-                </Layout>
-              }
-            />
-          </>
-        )}
+        <Route
+          path="/add-hotel"
+          element={
+            isLoggedIn && isOwnerOrAdmin ? (
+              <Layout>
+                <AddHotel />
+              </Layout>
+            ) : (
+              <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
+            )
+          }
+        />
+        <Route
+          path="/edit-hotel/:hotelId"
+          element={
+            isLoggedIn && isOwnerOrAdmin ? (
+              <Layout>
+                <EditHotel />
+              </Layout>
+            ) : (
+              <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
+            )
+          }
+        />
+        <Route
+          path="/my-hotels"
+          element={
+            isLoggedIn && isOwnerOrAdmin ? (
+              <Layout>
+                <MyHotels />
+              </Layout>
+            ) : (
+              <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
+            )
+          }
+        />
+        <Route
+          path="/my-bookings"
+          element={
+            isLoggedIn ? (
+              <Layout>
+                <MyBookings />
+              </Layout>
+            ) : (
+              <Navigate to="/sign-in" replace />
+            )
+          }
+        />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <Toaster />

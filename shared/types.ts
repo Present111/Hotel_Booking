@@ -30,6 +30,14 @@ export type UserType = {
   updatedAt?: Date;
 };
 
+export type AuthUser = {
+  userId: string;
+  role: "user" | "admin" | "hotel_owner";
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
 export type HotelType = {
   _id: string;
   userId: string;

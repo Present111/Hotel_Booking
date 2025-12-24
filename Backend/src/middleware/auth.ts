@@ -5,9 +5,12 @@ declare global {
   namespace Express {
     interface Request {
       userId: string;
+      userRole?: UserRole;
     }
   }
 }
+
+type UserRole = "user" | "admin" | "hotel_owner";
 
 const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
 
@@ -23,8 +26,8 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   if (authHeader && authHeader.startsWith("Bearer ")) {
     token = authHeader.substring(7);
   } else {
-    // Fallback to session cookie
-    token = req.cookies["session_id"];
+    // Fallback to cookies (support both legacy and new names)
+    token = req.cookies["session_id"] || req.cookies["auth_token"];
   }
 
   if (!token) {
@@ -33,11 +36,31 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
 
   try {
     const decoded = jwt.verify(token, jwtSecret);
-    req.userId = (decoded as JwtPayload).userId;
+    const payload = decoded as JwtPayload & { role?: UserRole };
+
+    req.userId = payload.userId;
+    req.userRole = payload.role || "user";
     next();
   } catch (error) {
     return res.status(401).json({ message: "unauthorized" });
   }
 };
+
+export const authorizeRoles =
+  (...allowedRoles: UserRole[]) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const role = req.userRole || "user";
+
+    // Allow admins everywhere
+    if (role === "admin") {
+      return next();
+    }
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(403).json({ message: "forbidden" });
+    }
+
+    next();
+  };
 
 export default verifyToken;
