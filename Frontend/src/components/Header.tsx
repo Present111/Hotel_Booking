@@ -13,7 +13,10 @@ import useSearchContext from "../hooks/useSearchContext";
 import SignOutButton from "./SignOutButton";
 
 const Header = () => {
-  const { isLoggedIn } = useAppContext();
+  const { isLoggedIn, currentUser } = useAppContext();
+  const isAdmin = currentUser?.role === "admin";
+  const isOwnerOrAdmin =
+    currentUser?.role === "hotel_owner" || currentUser?.role === "admin";
   const search = useSearchContext();
   const navigate = useNavigate();
 
@@ -51,16 +54,16 @@ const Header = () => {
             <nav className="hidden md:flex items-center space-x-1">
               {isLoggedIn ? (
                 <>
-                  {/* Analytics Dashboard Link */}
-                  <Link
-                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                    to="/analytics"
-                  >
-                    <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    Analytics
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                      to="/analytics"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                      Analytics
+                    </Link>
+                  )}
 
-                  {/* <div className="w-px h-6 bg-white/20 mx-2"></div> */}
                   <Link
                     className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
                     to="/my-bookings"
@@ -68,13 +71,16 @@ const Header = () => {
                     <Calendar className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                     My Bookings
                   </Link>
-                  <Link
-                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                    to="/my-hotels"
-                  >
-                    <Building2 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    My Hotels
-                  </Link>
+
+                  {isOwnerOrAdmin && (
+                    <Link
+                      className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                      to="/my-hotels"
+                    >
+                      <Building2 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                      My Hotels
+                    </Link>
+                  )}
 
                   {/* API Documentation Link */}
                   <Link

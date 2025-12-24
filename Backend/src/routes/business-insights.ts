@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import verifyToken from "../middleware/auth";
+import verifyToken, { authorizeRoles } from "../middleware/auth";
 import Booking from "../models/booking";
 import Hotel from "../models/hotel";
 import User from "../models/user";
@@ -33,8 +33,12 @@ interface BookingDocument {
  *       200:
  *         description: Business insights dashboard data
  */
-router.get("/dashboard", verifyToken, async (req: Request, res: Response) => {
-  try {
+router.get(
+  "/dashboard",
+  verifyToken,
+  authorizeRoles("admin"),
+  async (req: Request, res: Response) => {
+    try {
     // Get current date and date 30 days ago
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -285,13 +289,14 @@ router.get("/dashboard", verifyToken, async (req: Request, res: Response) => {
     });
 
     res.status(200).json(businessInsightsData);
-  } catch (error) {
-    res.status(500).json({
-      error: "Failed to fetch business insights data",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to fetch business insights data",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -304,8 +309,12 @@ router.get("/dashboard", verifyToken, async (req: Request, res: Response) => {
  *       200:
  *         description: Forecasting data
  */
-router.get("/forecast", verifyToken, async (req: Request, res: Response) => {
-  try {
+router.get(
+  "/forecast",
+  verifyToken,
+  authorizeRoles("admin"),
+  async (req: Request, res: Response) => {
+    try {
     const now = new Date();
     const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
@@ -476,13 +485,14 @@ router.get("/forecast", verifyToken, async (req: Request, res: Response) => {
     });
 
     res.status(200).json(forecastData);
-  } catch (error) {
-    res.status(500).json({
-      error: "Failed to generate forecasts",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to generate forecasts",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -495,8 +505,12 @@ router.get("/forecast", verifyToken, async (req: Request, res: Response) => {
  *       200:
  *         description: Performance metrics
  */
-router.get("/performance", verifyToken, async (req: Request, res: Response) => {
-  try {
+router.get(
+  "/performance",
+  verifyToken,
+  authorizeRoles("admin"),
+  async (req: Request, res: Response) => {
+    try {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
 
@@ -590,12 +604,13 @@ router.get("/performance", verifyToken, async (req: Request, res: Response) => {
     });
 
     res.status(200).json(performanceData);
-  } catch (error) {
-    res.status(500).json({
-      error: "Failed to fetch performance metrics",
-      message: error instanceof Error ? error.message : "Unknown error",
-    });
+    } catch (error) {
+      res.status(500).json({
+        error: "Failed to fetch performance metrics",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   }
-});
+);
 
 export default router;

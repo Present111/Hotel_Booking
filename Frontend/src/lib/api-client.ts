@@ -61,6 +61,8 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       Cookies.remove("session_id");
       localStorage.removeItem("session_id");
+      localStorage.removeItem("user_id");
+      localStorage.removeItem("user_role");
       // Don't redirect automatically - let components handle it
     }
 

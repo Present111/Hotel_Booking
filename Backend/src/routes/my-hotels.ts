@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import multer from "multer";
 import { HotelType } from "../../../shared/types";
-import verifyToken from "../middleware/auth";
+import verifyToken, { authorizeRoles } from "../middleware/auth";
 import Hotel from "../models/hotel";
 
 const router = express.Router();
@@ -107,6 +107,7 @@ const upload = multer({
 router.post(
   "/",
   verifyToken,
+  authorizeRoles("hotel_owner", "admin"),
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("city").notEmpty().withMessage("City is required"),
@@ -190,14 +191,21 @@ router.post(
  *       500:
  *         description: Error fetching hotels
  */
-router.get("/", verifyToken, async (req: Request, res: Response) => {
-  try {
-    const hotels = await Hotel.find({ userId: req.userId });
-    res.json(hotels);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching hotels" });
+router.get(
+  "/",
+  verifyToken,
+  authorizeRoles("hotel_owner", "admin"),
+  async (req: Request, res: Response) => {
+    try {
+      const filter =
+        req.userRole === "admin" ? {} : { userId: req.userId };
+      const hotels = await Hotel.find(filter);
+      res.json(hotels);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching hotels" });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -228,18 +236,30 @@ router.get("/", verifyToken, async (req: Request, res: Response) => {
  *       500:
  *         description: Error fetching hotels
  */
-router.get("/:id", verifyToken, async (req: Request, res: Response) => {
-  const id = req.params.id.toString();
-  try {
-    const hotel = await Hotel.findOne({
-      _id: id,
-      userId: req.userId,
-    });
-    res.json(hotel);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching hotels" });
+router.get(
+  "/:id",
+  verifyToken,
+  authorizeRoles("hotel_owner", "admin"),
+  async (req: Request, res: Response) => {
+    const id = req.params.id.toString();
+    try {
+      const filter =
+        req.userRole === "admin"
+          ? { _id: id }
+          : {
+              _id: id,
+              userId: req.userId,
+            };
+      const hotel = await Hotel.findOne(filter);
+      if (!hotel) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }
+      res.json(hotel);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching hotels" });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -279,6 +299,7 @@ router.get("/:id", verifyToken, async (req: Request, res: Response) => {
 router.put(
   "/:hotelId",
   verifyToken,
+  authorizeRoles("hotel_owner", "admin"),
   upload.array("imageFiles"),
   async (req: Request, res: Response) => {
     try {
@@ -287,10 +308,11 @@ router.put(
       console.log("User ID:", req.userId);
 
       // First, find the existing hotel
-      const existingHotel = await Hotel.findOne({
-        _id: req.params.hotelId,
-        userId: req.userId,
-      });
+      const existingHotel = await Hotel.findOne(
+        req.userRole === "admin"
+          ? { _id: req.params.hotelId }
+          : { _id: req.params.hotelId, userId: req.userId }
+      );
 
       if (!existingHotel) {
         return res.status(404).json({ message: "Hotel not found" });
