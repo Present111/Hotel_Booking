@@ -5,6 +5,11 @@ import { check, validationResult } from "express-validator";
 import verifyToken from "../middleware/auth";
 
 const router = express.Router();
+const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
+
+if (!jwtSecret) {
+  throw new Error("JWT secret is not configured");
+}
 
 /**
  * @swagger
@@ -134,7 +139,7 @@ router.post(
 
       const token = jwt.sign(
         { userId: user.id },
-        process.env.JWT_SECRET_KEY as string,
+        jwtSecret,
         {
           expiresIn: "1d",
         }
