@@ -9,6 +9,12 @@ declare global {
   }
 }
 
+const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
+
+if (!jwtSecret) {
+  throw new Error("JWT secret is not configured");
+}
+
 const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   // Check for token in Authorization header first (for axios interceptor)
   const authHeader = req.headers.authorization;
@@ -26,7 +32,7 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY as string);
+    const decoded = jwt.verify(token, jwtSecret);
     req.userId = (decoded as JwtPayload).userId;
     next();
   } catch (error) {
