@@ -5,7 +5,75 @@ import { check, validationResult } from "express-validator";
 import verifyToken from "../middleware/auth";
 
 const router = express.Router();
+const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
 
+if (!jwtSecret) {
+  throw new Error("JWT secret is not configured");
+}
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         email:
+ *           type: string
+ *         phoneNumber:
+ *           type: string
+ *         address:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     RegisterUserRequest:
+ *       type: object
+ *       required: [firstName, lastName, email, password]
+ *       properties:
+ *         firstName:
+ *           type: string
+ *         lastName:
+ *           type: string
+ *         email:
+ *           type: string
+ *           format: email
+ *         password:
+ *           type: string
+ *           format: password
+ */
+
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Users]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       400:
+ *         description: User not found
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Something went wrong
+ */
 router.get("/me", verifyToken, async (req: Request, res: Response) => {
   const userId = req.userId;
 
@@ -21,6 +89,26 @@ router.get("/me", verifyToken, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterUserRequest'
+ *     responses:
+ *       200:
+ *         description: User registered
+ *       400:
+ *         description: Validation failed or user already exists
+ *       500:
+ *         description: Something went wrong
+ */
 router.post(
   "/register",
   [
@@ -46,12 +134,16 @@ router.post(
         return res.status(400).json({ message: "User already exists" });
       }
 
-      user = new User(req.body);
+      // Ensure clients cannot elevate privileges during sign-up
+      user = new User({
+        ...req.body,
+        role: "user",
+      });
       await user.save();
 
       const token = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET_KEY as string,
+        { userId: user.id, role: user.role || "user" },
+        jwtSecret,
         {
           expiresIn: "1d",
         }
@@ -64,7 +156,19 @@ router.post(
         maxAge: 86400000,
         path: "/",
       });
-      return res.status(200).send({ message: "User registered OK" });
+      res.cookie("session_id", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 86400000,
+        path: "/",
+      });
+      return res.status(200).send({
+        message: "User registered OK",
+        userId: user._id,
+        role: user.role || "user",
+        token,
+      });
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Something went wrong" });

@@ -6,6 +6,11 @@ import jwt from "jsonwebtoken";
 import verifyToken from "../middleware/auth";
 
 const router = express.Router();
+const jwtSecret = process.env.JWT_SECRET || process.env.JWT_SECRET_KEY;
+
+if (!jwtSecret) {
+  throw new Error("JWT secret is not configured");
+}
 
 /**
  * @swagger
@@ -76,23 +81,40 @@ router.post(
       }
 
       const token = jwt.sign(
-        { userId: user.id },
-        process.env.JWT_SECRET_KEY as string,
+        { userId: user.id, role: user.role || "user" },
+        jwtSecret,
         {
           expiresIn: "1d",
         }
       );
+
+      res.cookie("session_id", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 86400000,
+        path: "/",
+      });
+      res.cookie("auth_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 86400000,
+        path: "/",
+      });
 
       // Return JWT token in response body for localStorage storage
       res.status(200).json({
         userId: user._id,
         message: "Login successful",
         token: token, // JWT token in response body
+        role: user.role || "user",
         user: {
           id: user._id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          role: user.role || "user",
         },
       });
     } catch (error) {
@@ -125,8 +147,27 @@ router.post(
  *       401:
  *         description: Token is invalid or expired
  */
-router.get("/validate-token", verifyToken, (req: Request, res: Response) => {
-  res.status(200).send({ userId: req.userId });
+router.get("/validate-token", verifyToken, async (req: Request, res: Response) => {
+  try {
+    const user = await User.findById(req.userId).select(
+      "firstName lastName email role"
+    );
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    res.status(200).send({
+      userId: user._id,
+      role: user.role || "user",
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
 });
 
 /**
@@ -144,9 +185,17 @@ router.post("/logout", (req: Request, res: Response) => {
   res.cookie("session_id", "", {
     expires: new Date(0),
     maxAge: 0,
-    httpOnly: false,
-    secure: true,
-    sameSite: "none",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
+  });
+  res.cookie("auth_token", "", {
+    expires: new Date(0),
+    maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     path: "/",
   });
   res.send();

@@ -120,13 +120,6 @@ MM/YY: 12/35 CVC: 123`;
       return;
     }
 
-    // Add the local state values to the form data
-    const completeFormData = {
-      ...formData,
-      phone,
-      specialRequests,
-    };
-
     const result = await stripe.confirmCardPayment(paymentIntent.clientSecret, {
       payment_method: {
         card: elements.getElement(CardElement) as StripeCardElement,
@@ -135,8 +128,17 @@ MM/YY: 12/35 CVC: 123`;
 
     if (result.paymentIntent?.status === "succeeded") {
       bookRoom({
-        ...completeFormData,
+        ...formData,
+        phone,
+        specialRequests,
         paymentIntentId: result.paymentIntent.id,
+      });
+    } else if (result.error) {
+      showToast({
+        title: "Payment Error",
+        description:
+          result.error.message || "Something went wrong with payment",
+        type: "ERROR",
       });
     }
   };

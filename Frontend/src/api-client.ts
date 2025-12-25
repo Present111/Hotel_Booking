@@ -2,12 +2,13 @@ import axiosInstance from "./lib/api-client";
 import { RegisterFormData } from "./pages/Register";
 import { SignInFormData } from "./pages/SignIn";
 import {
+  AuthUser,
+  BookingType,
   HotelSearchResponse,
   HotelType,
+  HotelWithBookingsType,
   PaymentIntentResponse,
   UserType,
-  HotelWithBookingsType,
-  BookingType,
 } from "../../shared/types";
 import { BookingFormData } from "./forms/BookingForm/BookingForm";
 import { queryClient } from "./main";
@@ -19,6 +20,16 @@ export const fetchCurrentUser = async (): Promise<UserType> => {
 
 export const register = async (formData: RegisterFormData) => {
   const response = await axiosInstance.post("/api/users/register", formData);
+  const token = response.data?.token;
+  if (token) {
+    localStorage.setItem("session_id", token);
+  }
+  if (response.data?.userId) {
+    localStorage.setItem("user_id", response.data.userId);
+  }
+  if (response.data?.role) {
+    localStorage.setItem("user_role", response.data.role);
+  }
   return response.data;
 };
 
@@ -36,6 +47,12 @@ export const signIn = async (formData: SignInFormData) => {
   if (response.data?.userId) {
     localStorage.setItem("user_id", response.data.userId);
     console.log("User ID stored for incognito mode fallback");
+  }
+  if (response.data?.role || response.data?.user?.role) {
+    localStorage.setItem(
+      "user_role",
+      response.data.role || response.data.user.role
+    );
   }
 
   // Force validate token after successful login to update React Query cache
@@ -60,10 +77,16 @@ export const signIn = async (formData: SignInFormData) => {
   return response.data;
 };
 
-export const validateToken = async () => {
+export const validateToken = async (): Promise<AuthUser> => {
   try {
     const response = await axiosInstance.get("/api/auth/validate-token");
-    return response.data;
+    const user = response.data as AuthUser;
+
+    // Keep a minimal auth snapshot for role-based UI
+    localStorage.setItem("user_id", user.userId);
+    localStorage.setItem("user_role", user.role);
+
+    return user;
   } catch (error: any) {
     if (error.response?.status === 401) {
       // Not logged in, throw error so React Query knows it failed
@@ -80,6 +103,7 @@ export const signOut = async () => {
   // Clear localStorage (JWT tokens)
   localStorage.removeItem("session_id");
   localStorage.removeItem("user_id");
+  localStorage.removeItem("user_role");
 
   return response.data;
 };
@@ -200,6 +224,7 @@ export const createRoomBooking = async (formData: BookingFormData) => {
     `/api/hotels/${formData.hotelId}/bookings`,
     formData
   );
+
   return response.data;
 };
 

@@ -1,18 +1,22 @@
+import {
+  Activity,
+  BarChart3,
+  BedDouble,
+  Building2,
+  Calendar,
+  FileText,
+  LogIn,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import useAppContext from "../hooks/useAppContext";
 import useSearchContext from "../hooks/useSearchContext";
 import SignOutButton from "./SignOutButton";
-import {
-  FileText,
-  Activity,
-  BarChart3,
-  Building2,
-  Calendar,
-  LogIn,
-} from "lucide-react";
 
 const Header = () => {
-  const { isLoggedIn } = useAppContext();
+  const { isLoggedIn, currentUser } = useAppContext();
+  const isAdmin = currentUser?.role === "admin";
+  const isOwnerOrAdmin =
+    currentUser?.role === "hotel_owner" || currentUser?.role === "admin";
   const search = useSearchContext();
   const navigate = useNavigate();
 
@@ -30,7 +34,7 @@ const Header = () => {
           🚧 Development Mode - Auth state persists between sessions
         </div>
       )} */}
-      <header className="bg-gradient-to-r from-primary-600 to-primary-700 shadow-large sticky top-0 z-50">
+      <header className="bg-white/85 backdrop-blur-md shadow-md sticky top-0 z-50 border-b border-white/60">
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
@@ -38,11 +42,11 @@ const Header = () => {
               onClick={handleLogoClick}
               className="flex items-center space-x-2 group"
             >
-              <div className="bg-white p-2 rounded-lg shadow-soft group-hover:shadow-medium transition-all duration-300">
-                <Building2 className="w-6 h-6 text-primary-600" />
+              <div className="bg-primary-50 p-2 rounded-lg shadow-soft group-hover:shadow-medium transition-all duration-300">
+                <BedDouble className="w-6 h-6 text-primary-700" />
               </div>
-              <span className="text-2xl font-bold text-white tracking-tight group-hover:text-primary-100 transition-colors">
-                MernHolidays
+              <span className="text-2xl font-bold text-primary-800 tracking-tight group-hover:text-primary-900 transition-colors">
+                Hotel Booking
               </span>
             </button>
 
@@ -50,34 +54,37 @@ const Header = () => {
             <nav className="hidden md:flex items-center space-x-1">
               {isLoggedIn ? (
                 <>
-                  {/* Analytics Dashboard Link */}
-                  <Link
-                    className="flex items-center text-white/90 hover:text-white px-4 py-2 rounded-lg font-medium hover:bg-white/10 transition-all duration-200 group"
-                    to="/analytics"
-                  >
-                    <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    Analytics
-                  </Link>
+                  {isAdmin && (
+                    <Link
+                      className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                      to="/analytics"
+                    >
+                      <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                      Analytics
+                    </Link>
+                  )}
 
-                  {/* <div className="w-px h-6 bg-white/20 mx-2"></div> */}
                   <Link
-                    className="flex items-center text-white/90 hover:text-white px-4 py-2 rounded-lg font-medium hover:bg-white/10 transition-all duration-200 group"
+                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
                     to="/my-bookings"
                   >
                     <Calendar className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                     My Bookings
                   </Link>
-                  <Link
-                    className="flex items-center text-white/90 hover:text-white px-4 py-2 rounded-lg font-medium hover:bg-white/10 transition-all duration-200 group"
-                    to="/my-hotels"
-                  >
-                    <Building2 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    My Hotels
-                  </Link>
+
+                  {isOwnerOrAdmin && (
+                    <Link
+                      className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                      to="/my-hotels"
+                    >
+                      <Building2 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                      My Hotels
+                    </Link>
+                  )}
 
                   {/* API Documentation Link */}
                   <Link
-                    className="flex items-center text-white/90 hover:text-white px-4 py-2 rounded-lg font-medium hover:bg-white/10 transition-all duration-200 group"
+                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
                     to="/api-docs"
                   >
                     <FileText className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
@@ -86,7 +93,7 @@ const Header = () => {
 
                   {/* API Status Link */}
                   <Link
-                    className="flex items-center text-white/90 hover:text-white px-4 py-2 rounded-lg font-medium hover:bg-white/10 transition-all duration-200 group"
+                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
                     to="/api-status"
                   >
                     <Activity className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
@@ -98,7 +105,7 @@ const Header = () => {
               ) : (
                 <Link
                   to="/sign-in"
-                  className="flex items-center bg-white text-primary-600 px-6 py-2 rounded-lg font-semibold hover:bg-primary-50 hover:shadow-medium transition-all duration-200 group"
+                  className="flex items-center bg-primary-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-primary-700 hover:shadow-medium transition-all duration-200 group"
                 >
                   <LogIn className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                   Sign In
@@ -108,7 +115,7 @@ const Header = () => {
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <button className="text-white p-2 rounded-lg hover:bg-white/10 transition-colors">
+              <button className="text-primary-800 p-2 rounded-lg hover:bg-primary-50 transition-colors">
                 <svg
                   className="w-6 h-6"
                   fill="none"
