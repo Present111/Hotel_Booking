@@ -49,7 +49,10 @@ export const signIn = async (formData: SignInFormData) => {
     console.log("User ID stored for incognito mode fallback");
   }
   if (response.data?.role || response.data?.user?.role) {
-    localStorage.setItem("user_role", response.data.role || response.data.user.role);
+    localStorage.setItem(
+      "user_role",
+      response.data.role || response.data.user.role
+    );
   }
 
   // Force validate token after successful login to update React Query cache
@@ -221,6 +224,7 @@ export const createRoomBooking = async (formData: BookingFormData) => {
     `/api/hotels/${formData.hotelId}/bookings`,
     formData
   );
+
   return response.data;
 };
 

@@ -7,7 +7,7 @@ import Booking from "../models/booking";
 import Hotel from "../models/hotel";
 import User from "../models/user";
 
-const stripe = new Stripe(process.env.STRIPE_API_KEY as string);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 
 const router = express.Router();
 
@@ -465,6 +465,7 @@ router.post(
       metadata: {
         hotelId,
         userId: req.userId,
+        bookingAttempt: Date.now().toString(),
       },
     });
 

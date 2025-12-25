@@ -1,10 +1,16 @@
-import cloudinary from "cloudinary";
-import express, { Request, Response } from "express";
-import { body } from "express-validator";
+import { v2 as cloudinary } from "cloudinary";
+import express, { NextFunction, Request, Response } from "express";
+import { body, validationResult } from "express-validator";
 import multer from "multer";
 import { HotelType } from "../../../shared/types";
 import verifyToken, { authorizeRoles } from "../middleware/auth";
 import Hotel from "../models/hotel";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const router = express.Router();
 
@@ -108,15 +114,15 @@ router.post(
   "/",
   verifyToken,
   authorizeRoles("hotel_owner", "admin"),
+
+  upload.array("imageFiles", 6),
+
   [
     body("name").notEmpty().withMessage("Name is required"),
     body("city").notEmpty().withMessage("City is required"),
     body("country").notEmpty().withMessage("Country is required"),
     body("description").notEmpty().withMessage("Description is required"),
-    body("type")
-      .notEmpty()
-      .isArray({ min: 1 })
-      .withMessage("Select at least one hotel type"),
+    body("type").notEmpty().withMessage("Hotel type is required"),
     body("pricePerNight")
       .notEmpty()
       .isNumeric()
@@ -126,18 +132,18 @@ router.post(
       .isArray()
       .withMessage("Facilities are required"),
   ],
-  upload.array("imageFiles", 6),
+
   async (req: Request, res: Response) => {
     try {
-      const imageFiles = (req as any).files as any[];
-      const newHotel: HotelType = req.body;
+      const imageFiles = req.files as Express.Multer.File[];
 
-      // Ensure type is always an array
-      if (typeof newHotel.type === "string") {
-        newHotel.type = [newHotel.type];
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ message: errors.array() });
       }
 
-      // Handle nested objects from FormData
+      const newHotel: HotelType = req.body;
+
       newHotel.contact = {
         phone: req.body["contact.phone"] || "",
         email: req.body["contact.email"] || "",
@@ -152,18 +158,21 @@ router.post(
         smokingPolicy: req.body["policies.smokingPolicy"] || "",
       };
 
-      const imageUrls = await uploadImages(imageFiles);
-
-      newHotel.imageUrls = imageUrls;
       newHotel.lastUpdated = new Date();
       newHotel.userId = req.userId;
+
+      if (imageFiles && imageFiles.length > 0) {
+        const imageUrls = await uploadImages(imageFiles);
+        newHotel.imageUrls = imageUrls;
+      } else {
+        newHotel.imageUrls = [];
+      }
 
       const hotel = new Hotel(newHotel);
       await hotel.save();
 
       res.status(201).send(hotel);
     } catch (e) {
-      console.log(e);
       res.status(500).json({ message: "Something went wrong" });
     }
   }
@@ -197,8 +206,7 @@ router.get(
   authorizeRoles("hotel_owner", "admin"),
   async (req: Request, res: Response) => {
     try {
-      const filter =
-        req.userRole === "admin" ? {} : { userId: req.userId };
+      const filter = req.userRole === "admin" ? {} : { userId: req.userId };
       const hotels = await Hotel.find(filter);
       res.json(hotels);
     } catch (error) {
@@ -351,8 +359,6 @@ router.put(
         smokingPolicy: req.body["policies.smokingPolicy"] || "",
       };
 
-      console.log("Update data:", updateData);
-
       // Update the hotel
       const updatedHotel = await Hotel.findByIdAndUpdate(
         req.params.hotelId,
@@ -394,11 +400,16 @@ router.put(
 );
 
 async function uploadImages(imageFiles: any[]) {
+  if (!imageFiles || imageFiles.length === 0) {
+    return [];
+  }
+
   const uploadPromises = imageFiles.map(async (image) => {
     const b64 = Buffer.from(image.buffer as Uint8Array).toString("base64");
     let dataURI = "data:" + image.mimetype + ";base64," + b64;
-    const res = await cloudinary.v2.uploader.upload(dataURI, {
-      secure: true, // Force HTTPS URLs
+
+    const res = await cloudinary.uploader.upload(dataURI, {
+      folder: "hotel_booking_app",
       transformation: [
         { width: 800, height: 600, crop: "fill" },
         { quality: "auto" },

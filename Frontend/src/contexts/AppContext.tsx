@@ -6,7 +6,7 @@ import { loadStripe, Stripe } from "@stripe/stripe-js";
 import { useToast } from "../hooks/use-toast";
 import { AuthUser } from "../../../shared/types";
 
-const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUB_KEY || "";
+const STRIPE_PUB_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
 
 type ToastMessage = {
   title: string;
@@ -28,6 +28,12 @@ export type AppContext = {
 export const AppContext = React.createContext<AppContext | undefined>(
   undefined
 );
+
+console.log("DEBUG KEY:", {
+  key: STRIPE_PUB_KEY,
+  length: STRIPE_PUB_KEY.length,
+  isTest: STRIPE_PUB_KEY.startsWith("pk_test_"),
+});
 
 const stripePromise = loadStripe(STRIPE_PUB_KEY);
 
@@ -79,9 +85,11 @@ export const AppContextProvider = ({
           );
 
           // If we also have a user ID, log the fallback usage
-          if (storedUserId) {
-            console.log("JWT session fallback - using stored token for UI only");
-          }
+          // if (storedUserId) {
+          //   console.log(
+          //     "JWT session fallback - using stored token for UI only"
+          //   );
+          // }
         }
       },
     }
