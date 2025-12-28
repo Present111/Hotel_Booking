@@ -19,6 +19,7 @@ import myhotelRoutes from "./routes/my-hotels";
 import mybookingsRoutes from "./routes/my-bookings";
 import userRoutes from "./routes/users";
 import { specs } from "./swagger";
+import aiRoutes from "./routes/ai";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -155,6 +156,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/hotels", hotelRoutes);
 app.use("/api/my-bookings", mybookingsRoutes);
 app.use("/api/my-hotels", myhotelRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Swagger API Documentation
 app.use(
