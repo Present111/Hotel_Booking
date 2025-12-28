@@ -8,7 +8,7 @@ import {
   Home,
   DollarSign,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import * as apiClient from "../api-client";
@@ -72,6 +72,15 @@ const AdminManagement = () => {
     status: "confirmed",
     paymentStatus: "paid",
   });
+  const [hotelSearch, setHotelSearch] = useState("");
+  const [userSearch, setUserSearch] = useState("");
+  const [bookingSearch, setBookingSearch] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<
+    BookingType["status"] | "all"
+  >("all");
+  const [bookingPaymentFilter, setBookingPaymentFilter] = useState<
+    BookingType["paymentStatus"] | "all"
+  >("all");
 
   const hotelsQuery = useQueryWithLoading<HotelType[]>(
     "admin-hotels",
@@ -85,6 +94,55 @@ const AdminManagement = () => {
     "admin-bookings",
     apiClient.fetchAllBookings
   );
+
+  const filteredHotels = useMemo(() => {
+    if (!hotelsQuery.data) return [];
+    if (!hotelSearch.trim()) return hotelsQuery.data;
+    const keyword = hotelSearch.toLowerCase();
+    return hotelsQuery.data.filter(
+      (h) =>
+        h.name.toLowerCase().includes(keyword) ||
+        h.city.toLowerCase().includes(keyword) ||
+        h.country.toLowerCase().includes(keyword) ||
+        h.userId?.toLowerCase().includes(keyword)
+    );
+  }, [hotelSearch, hotelsQuery.data]);
+
+  const filteredUsers = useMemo(() => {
+    if (!usersQuery.data) return [];
+    if (!userSearch.trim()) return usersQuery.data;
+    const keyword = userSearch.toLowerCase();
+    return usersQuery.data.filter(
+      (u) =>
+        `${u.firstName} ${u.lastName}`.toLowerCase().includes(keyword) ||
+        u.email.toLowerCase().includes(keyword) ||
+        (u.role || "").toLowerCase().includes(keyword)
+    );
+  }, [userSearch, usersQuery.data]);
+
+  const filteredBookings = useMemo(() => {
+    if (!bookingsQuery.data) return [];
+    const keyword = bookingSearch.toLowerCase();
+    return bookingsQuery.data.filter((b) => {
+      const matchesText =
+        !keyword ||
+        `${b.firstName} ${b.lastName}`.toLowerCase().includes(keyword) ||
+        (b.email || "").toLowerCase().includes(keyword) ||
+        (b.hotel?.name || "").toLowerCase().includes(keyword) ||
+        (b.hotel?.city || "").toLowerCase().includes(keyword);
+      const matchesStatus =
+        bookingStatusFilter === "all" || b.status === bookingStatusFilter;
+      const matchesPayment =
+        bookingPaymentFilter === "all" ||
+        b.paymentStatus === bookingPaymentFilter;
+      return matchesText && matchesStatus && matchesPayment;
+    });
+  }, [
+    bookingSearch,
+    bookingStatusFilter,
+    bookingPaymentFilter,
+    bookingsQuery.data,
+  ]);
 
   const toastError = (message: string) =>
     showToast({ title: "Action failed", description: message, type: "ERROR" });
@@ -145,7 +203,11 @@ const AdminManagement = () => {
     ({ id, status }: { id: string; status: BookingType["status"] }) =>
       apiClient.updateBookingStatus(id, { status }),
     {
-      onSuccess: () => qc.invalidateQueries("admin-bookings"),
+      onSuccess: () => {
+        qc.invalidateQueries("admin-bookings");
+        toastOk("Booking status updated");
+      },
+      onError: () => toastError("Could not update booking status"),
     }
   );
 
@@ -153,12 +215,19 @@ const AdminManagement = () => {
     ({ id, paymentStatus }: { id: string; paymentStatus: BookingType["paymentStatus"] }) =>
       apiClient.updateBookingPayment(id, { paymentStatus }),
     {
-      onSuccess: () => qc.invalidateQueries("admin-bookings"),
+      onSuccess: () => {
+        qc.invalidateQueries("admin-bookings");
+        toastOk("Payment status updated");
+      },
+      onError: () => toastError("Could not update payment status"),
     }
   );
 
   const deleteBooking = useMutation(apiClient.deleteBooking, {
-    onSuccess: () => qc.invalidateQueries("admin-bookings"),
+    onSuccess: () => {
+      qc.invalidateQueries("admin-bookings");
+      toastOk("Booking deleted");
+    },
     onError: () => toastError("Could not delete booking"),
   });
 
@@ -209,11 +278,17 @@ const AdminManagement = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3 text-gray-700">
               <Home className="w-5 h-5" />
-              <span>{hotelsQuery.data?.length || 0} hotels</span>
+              <span>{filteredHotels.length} hotels</span>
               <DollarSign className="w-5 h-5" />
               <span>{formatMoney(hotelsQuery.data?.reduce((s, h) => s + (h.totalRevenue || 0), 0))}</span>
             </div>
             <div className="flex gap-2">
+              <Input
+                placeholder="Search by name, city, owner..."
+                value={hotelSearch}
+                onChange={(e) => setHotelSearch(e.target.value)}
+                className="w-64"
+              />
               <Button asChild>
                 <Link to="/add-hotel">
                   <Plus className="w-4 h-4 mr-1" /> Add
@@ -228,7 +303,7 @@ const AdminManagement = () => {
             <p>Loading hotels...</p>
           ) : (
             <ul className="space-y-3">
-              {(hotelsQuery.data || []).map((h) => (
+              {filteredHotels.map((h) => (
                 <li key={h._id} className="border rounded p-3 flex justify-between items-center">
                   <div>
                     <div className="font-semibold">{h.name}</div>
@@ -333,35 +408,43 @@ const AdminManagement = () => {
             </div>
 
             <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-gray-700 font-semibold">
                     <UsersIcon className="w-4 h-4" />
                     All users
                   </div>
                   <p className="text-sm text-gray-500">
-                    Tổng: {usersQuery.data?.length || 0} tài khoản
+                    Tổng: {filteredUsers.length} tài khoản
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700">
-                    Active {usersQuery.data?.filter((u) => u.isActive)?.length || 0}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                    Inactive {usersQuery.data?.filter((u) => !u.isActive)?.length || 0}
-                  </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    placeholder="Search name, email, role..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="w-64"
+                  />
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-50 text-blue-700">
+                      Active {filteredUsers.filter((u) => u.isActive)?.length || 0}
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                      Inactive {filteredUsers.filter((u) => !u.isActive)?.length || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               <div className="mt-4 space-y-3 max-h-[460px] overflow-y-auto pr-1">
                 {usersQuery.isLoading ? (
                   <p className="text-gray-600">Loading users...</p>
-                ) : (usersQuery.data || []).length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                   <div className="p-4 border border-dashed rounded-xl text-center text-gray-500">
                     Chưa có user nào.
                   </div>
                 ) : (
-                  (usersQuery.data || []).map((u) => (
+                  filteredUsers.map((u) => (
                     <div
                       key={u._id}
                       className="rounded-xl border border-gray-100 shadow-[0_10px_30px_-20px_rgba(0,0,0,0.25)] bg-gradient-to-r from-white via-white to-slate-50 p-4 space-y-3"
@@ -571,75 +654,119 @@ const AdminManagement = () => {
             <div className="font-semibold mb-2 flex items-center gap-2"><Activity className="w-4 h-4" />All bookings</div>
             {bookingsQuery.isLoading ? (
               <p>Loading bookings...</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="text-left text-gray-500">
-                      <th className="p-2">Guest</th>
-                      <th className="p-2">Hotel</th>
-                      <th className="p-2">Dates</th>
-                      <th className="p-2">Total</th>
-                      <th className="p-2">Status</th>
-                      <th className="p-2">Payment</th>
-                      <th className="p-2">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(bookingsQuery.data || []).map((b) => (
-                      <tr key={b._id} className="border-t">
-                        <td className="p-2">
-                          <div className="font-semibold">{b.firstName} {b.lastName}</div>
-                          <div className="text-xs text-gray-500">{b.email}</div>
-                        </td>
-                        <td className="p-2">{b.hotel?.name || "-"}</td>
-                        <td className="p-2">{new Date(b.checkIn).toLocaleDateString()} - {new Date(b.checkOut).toLocaleDateString()}</td>
-                        <td className="p-2">{formatMoney(b.totalCost)}</td>
-                        <td className="p-2">
-                          <select
-                            value={b.status || "pending"}
-                            onChange={(e) =>
-                              updateBookingStatus.mutate({
-                                id: b._id,
-                                status: e.target.value as BookingType["status"],
-                              })
-                            }
-                            className="border rounded px-2 py-1"
-                          >
-                            {statusOptions.map((s) => (
-                              <option key={s}>{s}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="p-2">
-                          <select
-                            value={b.paymentStatus || "pending"}
-                            onChange={(e) =>
-                              updatePayment.mutate({
-                                id: b._id,
-                                paymentStatus: e.target.value as BookingType["paymentStatus"],
-                              })
-                            }
-                            className="border rounded px-2 py-1"
-                          >
-                            {paymentOptions.map((s) => (
-                              <option key={s}>{s}</option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="p-2">
-                          <button
-                            onClick={() => deleteBooking.mutate(b._id)}
-                            className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs flex items-center gap-1"
-                          >
-                            <Trash className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            ) : filteredBookings.length === 0 ? (
+              <div className="p-4 text-gray-500 border border-dashed rounded-lg text-center">
+                No bookings found.
               </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-3 mb-3">
+                  <Input
+                    placeholder="Search by guest, email, hotel, city..."
+                    value={bookingSearch}
+                    onChange={(e) => setBookingSearch(e.target.value)}
+                    className="w-64"
+                  />
+                  <select
+                    value={bookingStatusFilter}
+                    onChange={(e) =>
+                      setBookingStatusFilter(e.target.value as BookingType["status"] | "all")
+                    }
+                    className="border rounded px-3 py-2 text-sm"
+                  >
+                    <option value="all">All status</option>
+                    {statusOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={bookingPaymentFilter}
+                    onChange={(e) =>
+                      setBookingPaymentFilter(
+                        e.target.value as BookingType["paymentStatus"] | "all"
+                      )
+                    }
+                    className="border rounded px-3 py-2 text-sm"
+                  >
+                    <option value="all">All payment</option>
+                    {paymentOptions.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gray-500">
+                        <th className="p-2">Guest</th>
+                        <th className="p-2">Hotel</th>
+                        <th className="p-2">Dates</th>
+                        <th className="p-2">Total</th>
+                        <th className="p-2">Status</th>
+                        <th className="p-2">Payment</th>
+                        <th className="p-2">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredBookings.map((b) => (
+                        <tr key={b._id} className="border-t">
+                          <td className="p-2">
+                            <div className="font-semibold">{b.firstName} {b.lastName}</div>
+                            <div className="text-xs text-gray-500">{b.email}</div>
+                          </td>
+                          <td className="p-2">{b.hotel?.name || "-"}</td>
+                          <td className="p-2">{new Date(b.checkIn).toLocaleDateString()} - {new Date(b.checkOut).toLocaleDateString()}</td>
+                          <td className="p-2">{formatMoney(b.totalCost)}</td>
+                          <td className="p-2">
+                            <select
+                              value={b.status || "pending"}
+                              onChange={(e) =>
+                                updateBookingStatus.mutate({
+                                  id: b._id,
+                                  status: e.target.value as BookingType["status"],
+                                })
+                              }
+                              className="border rounded px-2 py-1"
+                            >
+                              {statusOptions.map((s) => (
+                                <option key={s}>{s}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-2">
+                            <select
+                              value={b.paymentStatus || "pending"}
+                              onChange={(e) =>
+                                updatePayment.mutate({
+                                  id: b._id,
+                                  paymentStatus: e.target.value as BookingType["paymentStatus"],
+                                })
+                              }
+                              className="border rounded px-2 py-1"
+                            >
+                              {paymentOptions.map((s) => (
+                                <option key={s}>{s}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="p-2">
+                            <button
+                              onClick={() => deleteBooking.mutate(b._id)}
+                              className="px-3 py-1 bg-red-100 text-red-700 rounded text-xs flex items-center gap-1"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>
