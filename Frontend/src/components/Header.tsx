@@ -7,6 +7,7 @@ import {
   FileText,
   LogIn,
   Shield,
+  User,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import useAppContext from "../hooks/useAppContext";
@@ -107,6 +108,14 @@ const Header = () => {
                       My Hotels
                     </Link>
                   )}
+
+                  <Link
+                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                    to="/profile"
+                  >
+                    <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    Profile
+                  </Link>
 
                   <SignOutButton />
                 </>
