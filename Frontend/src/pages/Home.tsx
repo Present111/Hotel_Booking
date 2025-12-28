@@ -1,6 +1,7 @@
 import { useQuery } from "react-query";
 import * as apiClient from "../api-client.ts";
 import LatestDestinationCard from "../components/LastestDestinationCard";
+import AIHotelChat from "../components/AIHotelChat"; 
 // import AdvancedSearch from "../components/AdvancedSearch";
 import Hero from "../components/Hero";
 
@@ -15,6 +16,9 @@ const Home = () => {
   return (
     <>
       <Hero onSearch={handleSearch} />
+      
+      <AIHotelChat />
+
       <div className="space-y-8">
         {/* Latest Destinations Section */}
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
