@@ -2,7 +2,7 @@ import { useQuery } from "react-query";
 import * as apiClient from "../api-client";
 import BookingForm from "../forms/BookingForm/BookingForm";
 import useSearchContext from "../hooks/useSearchContext";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import BookingDetailsSummary from "../components/BookingDetailsSummary";
 import { Elements } from "@stripe/react-stripe-js";
@@ -14,14 +14,17 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Loader2, CreditCard, Calendar, Users } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Loader2, CreditCard, Calendar, Users, AlertCircle } from "lucide-react";
 
 const Booking = () => {
   const { stripePromise } = useAppContext();
   const search = useSearchContext();
   const { hotelId } = useParams();
+  const navigate = useNavigate();
 
-  const [numberOfNights, setNumberOfNights] = useState<number>(0);
+  const [numberOfNights, setNumberOfNights] = useState<number>(1);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     if (search.checkIn && search.checkOut) {
@@ -29,21 +32,10 @@ const Booking = () => {
         Math.abs(search.checkOut.getTime() - search.checkIn.getTime()) /
         (1000 * 60 * 60 * 24);
 
-      setNumberOfNights(Math.ceil(nights));
+      // Always have at least 1 night so payment intent can be created
+      setNumberOfNights(Math.max(1, Math.ceil(nights)));
     }
   }, [search.checkIn, search.checkOut]);
-
-  const { data: paymentIntentData, isLoading: isLoadingPayment } = useQuery(
-    "createPaymentIntent",
-    () =>
-      apiClient.createPaymentIntent(
-        hotelId as string,
-        numberOfNights.toString()
-      ),
-    {
-      enabled: !!hotelId && numberOfNights > 0,
-    }
-  );
 
   const { data: hotel, isLoading: isLoadingHotel } = useQuery(
     "fetchHotelByID",
@@ -55,7 +47,41 @@ const Booking = () => {
 
   const { data: currentUser, isLoading: isLoadingUser } = useQuery(
     "fetchCurrentUser",
-    apiClient.fetchCurrentUser
+    apiClient.fetchCurrentUser,
+    {
+      retry: false,
+      onError: () => {
+        setPaymentError("Please sign in to continue with payment.");
+      },
+    }
+  );
+
+  const {
+    data: paymentIntentData,
+    isLoading: isLoadingPayment,
+    refetch: refetchPaymentIntent,
+  } = useQuery(
+    ["createPaymentIntent", hotelId, numberOfNights],
+    () =>
+      apiClient.createPaymentIntent(
+        hotelId as string,
+        numberOfNights.toString()
+      ),
+    {
+      enabled: !!hotelId && numberOfNights > 0 && !!currentUser,
+      retry: false,
+      onError: (error: any) => {
+        if (error?.response?.status === 401) {
+          setPaymentError("Your session expired. Please sign in again.");
+          return;
+        }
+
+        const message =
+          error?.response?.data?.message ||
+          "Unable to load the payment form. Please try again.";
+        setPaymentError(message);
+      },
+    }
   );
 
   if (isLoadingHotel || isLoadingUser) {
@@ -194,6 +220,41 @@ const Booking = () => {
                       paymentIntent={paymentIntentData}
                     />
                   </Elements>
+                </CardContent>
+              </Card>
+            ) : paymentError ? (
+              <Card className="shadow-lg border-0 bg-white">
+                <CardContent className="py-10 px-6">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <AlertCircle className="h-10 w-10 text-red-500" />
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Unable to load payment form
+                    </h3>
+                    <p className="text-gray-600">{paymentError}</p>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => refetchPaymentIntent()}
+                      >
+                        Thử lại
+                      </Button>
+                      <Button onClick={() => navigate("/sign-in")}>
+                        Đăng nhập
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : !currentUser ? (
+              <Card className="shadow-lg border-0 bg-white">
+                <CardContent className="flex flex-col items-center text-center py-12 space-y-4">
+                  <AlertCircle className="h-8 w-8 text-yellow-500" />
+                  <p className="text-gray-700">
+                    Please sign in to continue with payment and finish booking.
+                  </p>
+                  <Button onClick={() => navigate("/sign-in")}>
+                    Go to sign in
+                  </Button>
                 </CardContent>
               </Card>
             ) : (

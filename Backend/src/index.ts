@@ -1,3 +1,4 @@
+import "./polyfills";
 import { v2 as cloudinary } from "cloudinary";
 import compression from "compression";
 import cookieParser from "cookie-parser";
