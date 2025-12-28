@@ -81,7 +81,7 @@ PORT=7002
 NODE_ENV=development
 
 # Database
-MONGODB_CONNECTION_STRING=mongodb+srv://username:password@cluster.mongodb.net/hotel-booking
+MONGODB_CONNECTION_STRING=mongodb+srv://22521118:22521118@cluster0.pmshb.mongodb.net/hotel-booking?retryWrites=true&w=majority&appName=Cluster0/hotel-booking
 
 # Authentication
 JWT_SECRET_KEY=your-super-secure-jwt-secret-key-here
