@@ -6,6 +6,15 @@ import {
   MapPin,
   Calendar,
   Users,
+  Banknote,
+  Wifi,
+  Car,
+  Waves,
+  Dumbbell,
+  Bath,
+  Coffee,
+  Zap,
+  Undo2,
 } from "lucide-react";
 import useSearchContext from "../hooks/useSearchContext";
 
@@ -23,8 +32,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(isExpanded);
   const [searchData, setSearchData] = useState({
     destination: search.destination,
-    checkIn: search.checkIn,
-    checkOut: search.checkOut,
     adultCount: search.adultCount,
     childCount: search.childCount,
     // Advanced filters
@@ -145,14 +152,14 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
   ];
 
   const facilityOptions = [
-    { id: "wifi", label: "Free WiFi", icon: "📶" },
-    { id: "parking", label: "Free Parking", icon: "🚗" },
-    { id: "pool", label: "Swimming Pool", icon: "🏊" },
-    { id: "gym", label: "Fitness Center", icon: "💪" },
-    { id: "spa", label: "Spa", icon: "🧖" },
-    { id: "breakfast", label: "Free Breakfast", icon: "🍳" },
-    { id: "instantBooking", label: "Instant Booking", icon: "⚡" },
-    { id: "freeCancellation", label: "Free Cancellation", icon: "✅" },
+    { id: "wifi", label: "Free WiFi", Icon: Wifi },
+    { id: "parking", label: "Free Parking", Icon: Car },
+    { id: "pool", label: "Swimming Pool", Icon: Waves },
+    { id: "gym", label: "Fitness Center", Icon: Dumbbell },
+    { id: "spa", label: "Spa", Icon: Bath },
+    { id: "breakfast", label: "Free Breakfast", Icon: Coffee },
+    { id: "instantBooking", label: "Instant Booking", Icon: Zap },
+    { id: "freeCancellation", label: "Free Cancellation", Icon: Undo2 },
   ];
 
   const handleInputChange = (field: string, value: any) => {
@@ -177,8 +184,8 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       // Show all hotels when destination is empty
       search.saveSearchValues(
         "", // Empty destination to show all hotels
-        searchData.checkIn,
-        searchData.checkOut,
+        new Date(),
+        new Date(),
         searchData.adultCount,
         searchData.childCount
       );
@@ -190,8 +197,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       // Navigate to search page with advanced filters
       const searchParams = new URLSearchParams();
       searchParams.append("destination", ""); // Empty destination
-      searchParams.append("checkIn", searchData.checkIn.toISOString());
-      searchParams.append("checkOut", searchData.checkOut.toISOString());
       searchParams.append("adultCount", searchData.adultCount.toString());
       searchParams.append("childCount", searchData.childCount.toString());
 
@@ -218,8 +223,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
       setTimeout(() => {
         setSearchData({
           destination: "",
-          checkIn: new Date(),
-          checkOut: new Date(),
           adultCount: 1,
           childCount: 0,
           minPrice: "",
@@ -246,8 +249,8 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     // Update search context
     search.saveSearchValues(
       searchData.destination.trim(),
-      searchData.checkIn,
-      searchData.checkOut,
+      new Date(),
+      new Date(),
       searchData.adultCount,
       searchData.childCount
     );
@@ -259,8 +262,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     // Navigate to search page with advanced filters
     const searchParams = new URLSearchParams();
     searchParams.append("destination", searchData.destination.trim());
-    searchParams.append("checkIn", searchData.checkIn.toISOString());
-    searchParams.append("checkOut", searchData.checkOut.toISOString());
     searchParams.append("adultCount", searchData.adultCount.toString());
     searchParams.append("childCount", searchData.childCount.toString());
 
@@ -287,8 +288,6 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
     setTimeout(() => {
       setSearchData({
         destination: "",
-        checkIn: new Date(),
-        checkOut: new Date(),
         adultCount: 1,
         childCount: 0,
         minPrice: "",
@@ -400,41 +399,41 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
           </div>
         </div>
 
-        {/* Check-in Date */}
+        {/* Price From */}
         <div className="space-y-2">
           <label className="text-sm font-semibold text-gray-700 flex items-center">
-            <Calendar className="w-4 h-4 mr-2 text-primary-600" />
-            Check-in
+            <Banknote className="w-4 h-4 mr-2 text-primary-600" />
+            Price from
           </label>
           <div className="relative">
             <input
-              type="date"
+              type="number"
+              min={0}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-              value={searchData.checkIn.toISOString().split("T")[0]}
-              onChange={(e) =>
-                handleInputChange("checkIn", new Date(e.target.value))
-              }
+              value={searchData.minPrice}
+              onChange={(e) => handleInputChange("minPrice", e.target.value)}
+              placeholder="Min price"
             />
-            <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Banknote className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
           </div>
         </div>
 
-        {/* Check-out Date */}
+        {/* Price To */}
         <div className="space-y-2">
           <label className="text-sm font-semibold text-gray-700 flex items-center">
-            <Calendar className="w-4 h-4 mr-2 text-primary-600" />
-            Check-out
+            <Banknote className="w-4 h-4 mr-2 text-primary-600" />
+            Price to
           </label>
           <div className="relative">
             <input
-              type="date"
+              type="number"
+              min={0}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
-              value={searchData.checkOut.toISOString().split("T")[0]}
-              onChange={(e) =>
-                handleInputChange("checkOut", new Date(e.target.value))
-              }
+              value={searchData.maxPrice}
+              onChange={(e) => handleInputChange("maxPrice", e.target.value)}
+              placeholder="Max price"
             />
-            <Calendar className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <Banknote className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
           </div>
         </div>
 
@@ -576,7 +575,7 @@ const AdvancedSearch: React.FC<AdvancedSearchProps> = ({
                     onChange={() => handleFacilityToggle(facility.id)}
                   />
                   <span className="text-sm text-gray-700">
-                    {facility.icon} {facility.label}
+                    <facility.Icon className="w-4 h-4 text-blue-600" /> {facility.label}
                   </span>
                 </label>
               ))}
