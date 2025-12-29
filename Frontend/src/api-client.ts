@@ -1,4 +1,5 @@
 import axiosInstance from "./lib/api-client";
+import axios from "axios";
 import { RegisterFormData } from "./pages/Register";
 import { SignInFormData } from "./pages/SignIn";
 import {
@@ -68,47 +69,79 @@ export const register = async (formData: RegisterFormData) => {
 };
 
 export const signIn = async (formData: SignInFormData) => {
-  const response = await axiosInstance.post("/api/auth/login", formData);
-
-  // Store JWT token from response body in localStorage
-  const token = response.data?.token;
-  if (token) {
-    localStorage.setItem("session_id", token);
-    console.log("JWT token stored in localStorage for incognito compatibility");
-  }
-
-  // Store user info for incognito mode fallback
-  if (response.data?.userId) {
-    localStorage.setItem("user_id", response.data.userId);
-    console.log("User ID stored for incognito mode fallback");
-  }
-  if (response.data?.role || response.data?.user?.role) {
-    localStorage.setItem(
-      "user_role",
-      response.data.role || response.data.user.role
-    );
-  }
-
-  // Force validate token after successful login to update React Query cache
   try {
-    const validationResult = await validateToken();
-    console.log("Token validation after login:", validationResult);
+    const response = await axiosInstance.post("/api/auth/login", formData);
 
-    // Invalidate and refetch the validateToken query to update the UI
-    queryClient.invalidateQueries("validateToken");
-
-    // Force a refetch to ensure the UI updates
-    await queryClient.refetchQueries("validateToken");
-  } catch (error) {
-    console.log("Token validation failed after login, but continuing...");
-
-    // Even if validation fails, if we have a token stored, consider it a success for incognito mode
-    if (localStorage.getItem("session_id")) {
-      console.log("Incognito mode detected - using stored token as fallback");
+    // Store JWT token from response body in localStorage
+    const token = response.data?.token;
+    if (token) {
+      localStorage.setItem("session_id", token);
+      console.log(
+        "JWT token stored in localStorage for incognito compatibility"
+      );
     }
-  }
 
-  return response.data;
+    // Store user info for incognito mode fallback
+    if (response.data?.userId) {
+      localStorage.setItem("user_id", response.data.userId);
+      console.log("User ID stored for incognito mode fallback");
+    }
+    if (response.data?.role || response.data?.user?.role) {
+      localStorage.setItem(
+        "user_role",
+        response.data.role || response.data.user.role
+      );
+    }
+
+    // Force validate token after successful login to update React Query cache
+    try {
+      const validationResult = await validateToken();
+      console.log("Token validation after login:", validationResult);
+
+      // Invalidate and refetch the validateToken query to update the UI
+      queryClient.invalidateQueries("validateToken");
+
+      // Force a refetch to ensure the UI updates
+      await queryClient.refetchQueries("validateToken");
+    } catch (error) {
+      console.log("Token validation failed after login, but continuing...");
+
+      // Even if validation fails, if we have a token stored, consider it a success for incognito mode
+      if (localStorage.getItem("session_id")) {
+        console.log("Incognito mode detected - using stored token as fallback");
+      }
+    }
+
+    return response.data;
+  } catch (error: any) {
+    const defaultMessage = "Email or password is incorrect.";
+
+    // Normalize server errors to a friendly message for invalid credentials
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const serverMessage = (error.response?.data as any)?.message;
+
+      if (status === 400 || status === 401) {
+        // Validation errors may return an array from express-validator
+        if (Array.isArray(serverMessage)) {
+          const firstMsg = serverMessage[0]?.msg;
+          throw new Error(firstMsg || defaultMessage);
+        }
+
+        if (typeof serverMessage === "string") {
+          throw new Error(serverMessage || defaultMessage);
+        }
+
+        throw new Error(defaultMessage);
+      }
+
+      if (serverMessage) {
+        throw new Error(serverMessage);
+      }
+    }
+
+    throw new Error("Unable to sign in. Please try again.");
+  }
 };
 
 export const validateToken = async (): Promise<AuthUser> => {
