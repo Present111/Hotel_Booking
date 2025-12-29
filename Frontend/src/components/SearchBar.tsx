@@ -1,8 +1,6 @@
 import { FormEvent, useState, useEffect, useRef } from "react";
 import useSearchContext from "../hooks/useSearchContext";
 import { MdTravelExplore } from "react-icons/md";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -17,8 +15,8 @@ const SearchBar = () => {
   const [places, setPlaces] = useState<string[]>([]);
   const [filteredPlaces, setFilteredPlaces] = useState<string[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
-  const [checkIn, setCheckIn] = useState<Date>(search.checkIn);
-  const [checkOut, setCheckOut] = useState<Date>(search.checkOut);
+  const [minPrice, setMinPrice] = useState<number>(0);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
   const [adultCount, setAdultCount] = useState<number>(search.adultCount);
   const [childCount, setChildCount] = useState<number>(search.childCount);
   const hasFetchedRef = useRef(false);
@@ -139,8 +137,8 @@ const SearchBar = () => {
       // Show all hotels when destination is empty
       search.saveSearchValues(
         "", // Empty destination to show all hotels
-        checkIn,
-        checkOut,
+        new Date(),
+        new Date(),
         adultCount,
         childCount
       );
@@ -155,8 +153,8 @@ const SearchBar = () => {
       // Only clear the local form state
       setTimeout(() => {
         setDestination("");
-        setCheckIn(minDate);
-        setCheckOut(minDate);
+        setMinPrice(0);
+        setMaxPrice(0);
         setAdultCount(1);
         setChildCount(0);
         // Remove this line: search.clearSearchValues();
@@ -166,8 +164,8 @@ const SearchBar = () => {
 
     search.saveSearchValues(
       destination.trim(),
-      checkIn,
-      checkOut,
+      new Date(),
+      new Date(),
       adultCount,
       childCount
     );
@@ -176,14 +174,21 @@ const SearchBar = () => {
     setShowDropdown(false);
     setFilteredPlaces([]);
 
-    navigate("/search");
+    const params = new URLSearchParams();
+    params.append("destination", destination.trim());
+    if (minPrice) params.append("minPrice", minPrice.toString());
+    if (maxPrice) params.append("maxPrice", maxPrice.toString());
+    if (adultCount) params.append("adults", adultCount.toString());
+    if (childCount) params.append("children", childCount.toString());
+
+    navigate(`/search?${params.toString()}`);
 
     // Don't clear search values immediately - let the search page use them
     // Only clear the local form state
     setTimeout(() => {
       setDestination("");
-      setCheckIn(minDate);
-      setCheckOut(minDate);
+      setMinPrice(0);
+      setMaxPrice(0);
       setAdultCount(1);
       setChildCount(0);
       // Remove this line: search.clearSearchValues();
@@ -192,8 +197,8 @@ const SearchBar = () => {
 
   const handleClear = () => {
     setDestination("");
-    setCheckIn(minDate);
-    setCheckOut(minDate);
+    setMinPrice(0);
+    setMaxPrice(0);
     setAdultCount(1);
     setChildCount(0);
     search.clearSearchValues();
@@ -201,10 +206,6 @@ const SearchBar = () => {
     setHasUserInteracted(false);
     setIsInitialMount(false);
   };
-
-  const minDate = new Date();
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() + 1);
 
   return (
     <Card className="p-4">
@@ -260,31 +261,31 @@ const SearchBar = () => {
           </div>
 
           <div className="sm:col-span-1">
-            <DatePicker
-              selected={checkIn}
-              onChange={(date) => setCheckIn(date as Date)}
-              selectsStart
-              startDate={checkIn}
-              endDate={checkOut}
-              minDate={minDate}
-              maxDate={maxDate}
-              placeholderText="Check-in Date"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              wrapperClassName="min-w-full"
+            <label className="block text-sm text-muted-foreground mb-1">
+              Price from
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={minPrice}
+              onChange={(event) =>
+                setMinPrice(parseInt(event.target.value) || 0)
+              }
+              placeholder="Min price"
             />
           </div>
           <div className="sm:col-span-1">
-            <DatePicker
-              selected={checkOut}
-              onChange={(date) => setCheckOut(date as Date)}
-              selectsStart
-              startDate={checkIn}
-              endDate={checkOut}
-              minDate={minDate}
-              maxDate={maxDate}
-              placeholderText="Check-out Date"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              wrapperClassName="min-w-full"
+            <label className="block text-sm text-muted-foreground mb-1">
+              Price to
+            </label>
+            <Input
+              type="number"
+              min={0}
+              value={maxPrice}
+              onChange={(event) =>
+                setMaxPrice(parseInt(event.target.value) || 0)
+              }
+              placeholder="Max price"
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:col-span-2 lg:col-span-1">
