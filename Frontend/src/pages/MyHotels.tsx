@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
+import { useQueryClient, useMutation } from "react-query";
 import { useQueryWithLoading } from "../hooks/useLoadingHooks";
+import useAppContext from "../hooks/useAppContext";
 import * as apiClient from "../api-client";
 import { BsBuilding, BsMap } from "react-icons/bs";
 import { BiHotel, BiMoney } from "react-icons/bi";
@@ -12,12 +14,15 @@ import {
   Star,
   Building2,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import BookingLogModal from "../components/BookingLogModal";
 import { useState } from "react";
 
 const MyHotels = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useAppContext();
   const [selectedHotel, setSelectedHotel] = useState<{
     id: string;
     name: string;
@@ -32,6 +37,32 @@ const MyHotels = () => {
       loadingMessage: "Loading your hotels...",
     }
   );
+
+  const deleteHotel = useMutation(apiClient.deleteHotel, {
+    onSuccess: () => {
+      showToast({
+        title: "Hotel deleted",
+        description: "The hotel has been removed successfully.",
+        type: "SUCCESS",
+      });
+      queryClient.invalidateQueries("fetchMyHotels");
+    },
+    onError: (error: any) => {
+      showToast({
+        title: "Delete failed",
+        description: error?.message || "Unable to delete hotel.",
+        type: "ERROR",
+      });
+    },
+  });
+
+  const handleDeleteHotel = (hotelId: string, hotelName: string) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${hotelName}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+    deleteHotel.mutate(hotelId);
+  };
 
   const handleOpenBookingLog = (hotelId: string, hotelName: string) => {
     setSelectedHotel({ id: hotelId, name: hotelName });
@@ -291,6 +322,14 @@ const MyHotels = () => {
                 >
                   <Calendar className="w-4 h-4 mr-2" />
                   Booking Log
+                </button>
+                <button
+                  onClick={() => handleDeleteHotel(hotel._id, hotel.name)}
+                  className="flex-1 bg-red-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-700 transition-colors text-center flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={deleteHotel.isLoading}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {deleteHotel.isLoading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>
