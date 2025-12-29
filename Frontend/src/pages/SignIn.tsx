@@ -4,7 +4,15 @@ import { useMutationWithLoading } from "../hooks/useLoadingHooks";
 import * as apiClient from "../api-client";
 import useAppContext from "../hooks/useAppContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, LogIn, Sparkles } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  Sparkles,
+  AlertCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -18,6 +26,14 @@ import {
 import { Label } from "../components/ui/label";
 import { Separator } from "../components/ui/separator";
 import { Badge } from "../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
 import backgroundLogin from "../assets/backgroundLogin.jpg";
 
 export type SignInFormData = {
@@ -31,6 +47,8 @@ const SignIn = () => {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const location = useLocation();
 
@@ -52,9 +70,12 @@ const SignIn = () => {
       navigate(location.state?.from?.pathname || "/");
     },
     onError: (error: Error) => {
+      const message = error.message || "Email or password is incorrect.";
+      setErrorMessage(message);
+      setErrorDialogOpen(true);
       showToast({
         title: "Sign In Failed",
-        description: error.message,
+        description: message,
         type: "ERROR",
       });
     },
@@ -69,7 +90,36 @@ const SignIn = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white">
+    <>
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="max-w-md border-0 bg-white/90 backdrop-blur-md shadow-2xl ring-1 ring-red-100">
+          <div className="absolute inset-x-0 -top-1 h-1 rounded-full bg-gradient-to-r from-red-500 via-amber-500 to-red-500" />
+          <DialogHeader className="flex flex-row items-start gap-4">
+            <div className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-100">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <DialogTitle className="text-xl font-semibold text-gray-900">
+                Sign in failed
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-600 leading-relaxed">
+                {errorMessage ||
+                  "Email or password is incorrect. Please try again."}
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="mt-2">
+            <Button
+              className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white"
+              onClick={() => setErrorDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <div className="min-h-screen flex flex-col lg:flex-row bg-white">
       {/* Left: form */}
       <div className="flex-1 flex items-center justify-center py-12 px-6 lg:px-12">
         <div className="w-full max-w-lg space-y-8">
@@ -258,6 +308,7 @@ const SignIn = () => {
         style={{ backgroundImage: `url(${backgroundLogin})` }}
       />
     </div>
+    </>
   );
 };
 
