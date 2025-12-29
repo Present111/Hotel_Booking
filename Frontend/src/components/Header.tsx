@@ -6,6 +6,8 @@ import {
   Calendar,
   FileText,
   LogIn,
+  Shield,
+  User,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import useAppContext from "../hooks/useAppContext";
@@ -15,8 +17,8 @@ import SignOutButton from "./SignOutButton";
 const Header = () => {
   const { isLoggedIn, currentUser } = useAppContext();
   const isAdmin = currentUser?.role === "admin";
-  const isOwnerOrAdmin =
-    currentUser?.role === "hotel_owner" || currentUser?.role === "admin";
+  const isOwner = currentUser?.role === "hotel_owner";
+  const isUser = currentUser?.role === "user";
   const search = useSearchContext();
   const navigate = useNavigate();
 
@@ -55,24 +57,49 @@ const Header = () => {
               {isLoggedIn ? (
                 <>
                   {isAdmin && (
+                    <>
+                      <Link
+                        className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                        to="/analytics"
+                      >
+                        <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                        Analytics
+                      </Link>
+                      <Link
+                        className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                        to="/admin"
+                      >
+                        <Shield className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                        Admin
+                      </Link>
+                      <Link
+                        className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                        to="/api-docs"
+                      >
+                        <FileText className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                        API Docs
+                      </Link>
+                      <Link
+                        className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
+                        to="/api-status"
+                      >
+                        <Activity className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                        API Status
+                      </Link>
+                    </>
+                  )}
+
+                  {isUser && (
                     <Link
                       className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                      to="/analytics"
+                      to="/my-bookings"
                     >
-                      <BarChart3 className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                      Analytics
+                      <Calendar className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                      My Bookings
                     </Link>
                   )}
 
-                  <Link
-                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                    to="/my-bookings"
-                  >
-                    <Calendar className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    My Bookings
-                  </Link>
-
-                  {isOwnerOrAdmin && (
+                  {isOwner && (
                     <Link
                       className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
                       to="/my-hotels"
@@ -82,22 +109,12 @@ const Header = () => {
                     </Link>
                   )}
 
-                  {/* API Documentation Link */}
                   <Link
                     className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                    to="/api-docs"
+                    to="/profile"
                   >
-                    <FileText className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    API Docs
-                  </Link>
-
-                  {/* API Status Link */}
-                  <Link
-                    className="flex items-center text-primary-800 hover:text-primary-900 px-4 py-2 rounded-lg font-medium hover:bg-primary-50 transition-all duration-200 group"
-                    to="/api-status"
-                  >
-                    <Activity className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                    API Status
+                    <User className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
+                    Profile
                   </Link>
 
                   <SignOutButton />

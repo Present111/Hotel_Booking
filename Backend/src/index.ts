@@ -18,6 +18,7 @@ import hotelRoutes from "./routes/hotels";
 import myhotelRoutes from "./routes/my-hotels";
 import mybookingsRoutes from "./routes/my-bookings";
 import userRoutes from "./routes/users";
+import adminRoutes from "./routes/admin";
 import { specs } from "./swagger";
 import aiRoutes from "./routes/ai";
 
@@ -36,6 +37,51 @@ app.use(helmet());
 
 // Trust proxy for production (fixes rate limiting issues)
 app.set("trust proxy", 1);
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:5174",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://mern-booking-hotel.netlify.app",
+  "https://mern-booking-hotel.netlify.app/",
+].filter((origin): origin is string => Boolean(origin));
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: any) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Allow all Netlify preview URLs
+    if (origin.includes("netlify.app")) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Log blocked origins in development
+    if (process.env.NODE_ENV === "development") {
+      console.log("CORS blocked origin:", origin);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  optionsSuccessStatus: 204,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "Cookie",
+    "X-Requested-With",
+  ],
+};
+
+// CORS first so preflight always gets headers
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 // Rate limiting - more lenient for payment endpoints
 const generalLimiter = rateLimit({
@@ -63,14 +109,6 @@ app.use(compression());
 
 // Logging middleware
 app.use(morgan("combined"));
-
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "http://localhost:5174",
-  "http://localhost:5173",
-  "https://mern-booking-hotel.netlify.app",
-  "https://mern-booking-hotel.netlify.app/",
-].filter((origin): origin is string => Boolean(origin));
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -95,7 +133,7 @@ app.use(
     },
     credentials: true,
     optionsSuccessStatus: 204,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
       "Content-Type",
       "Authorization",
@@ -107,32 +145,7 @@ app.use(
 // Explicit preflight handler for all routes
 app.options(
   "*",
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-
-      // Allow all Netlify preview URLs
-      if (origin.includes("netlify.app")) {
-        return callback(null, true);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    optionsSuccessStatus: 204,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Cookie",
-      "X-Requested-With",
-    ],
-  })
+  cors(corsOptions)
 );
 app.use(cookieParser());
 app.use(express.json());
@@ -157,6 +170,7 @@ app.use("/api/hotels", hotelRoutes);
 app.use("/api/my-bookings", mybookingsRoutes);
 app.use("/api/my-hotels", myhotelRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Swagger API Documentation
 app.use(

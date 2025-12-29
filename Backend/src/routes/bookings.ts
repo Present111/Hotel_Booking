@@ -4,6 +4,7 @@ import verifyToken, { authorizeRoles } from "../middleware/auth";
 import Booking from "../models/booking";
 import Hotel from "../models/hotel";
 import User from "../models/user";
+import { HotelType, UserType } from "../../../shared/types";
 
 const router = express.Router();
 
@@ -95,11 +96,56 @@ router.get(
   authorizeRoles("admin"),
   async (req: Request, res: Response) => {
     try {
-      const bookings = await Booking.find()
-        .sort({ createdAt: -1 })
-        .populate("hotelId", "name city country");
+      const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
 
-    res.status(200).json(bookings);
+      // Enrich booking data with user and hotel details for admin views
+      const hotelIds = Array.from(
+        new Set(
+          bookings
+            .map((booking) => booking.hotelId)
+            .filter((id): id is string => Boolean(id))
+        )
+      );
+      const userIds = Array.from(
+        new Set(
+          bookings
+            .map((booking) => booking.userId)
+            .filter((id): id is string => Boolean(id))
+        )
+      );
+
+      const hotels = await Hotel.find({ _id: { $in: hotelIds } })
+        .select("name city country pricePerNight starRating")
+        .lean();
+      const users = await User.find({ _id: { $in: userIds } })
+        .select("firstName lastName email role isActive")
+        .lean();
+
+      const hotelMap = new Map<string, Partial<HotelType>>();
+      hotels.forEach((hotel) => {
+        hotelMap.set(hotel._id.toString(), hotel as unknown as HotelType);
+      });
+
+      const userMap = new Map<string, Partial<UserType>>();
+      users.forEach((user) => {
+        userMap.set(user._id.toString(), user as unknown as UserType);
+      });
+
+      const enrichedBookings = bookings.map((booking) => ({
+        ...booking,
+        hotel: hotelMap.get(
+          typeof booking.hotelId === "string"
+            ? booking.hotelId
+            : String(booking.hotelId)
+        ),
+        user: userMap.get(
+          typeof booking.userId === "string"
+            ? booking.userId
+            : String(booking.userId)
+        ),
+      }));
+
+      res.status(200).json(enrichedBookings);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Unable to fetch bookings" });

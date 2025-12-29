@@ -19,6 +19,8 @@ import EditHotel from "./pages/EditHotel";
 import Home from "./pages/Home";
 import MyBookings from "./pages/MyBookings";
 import MyHotels from "./pages/MyHotels";
+import AdminManagement from "./pages/AdminManagement";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Search from "./pages/Search";
 import SignIn from "./pages/SignIn";
@@ -78,6 +80,18 @@ const App = () => {
             isLoggedIn && isAdmin ? (
               <Layout>
                 <AnalyticsDashboard />
+              </Layout>
+            ) : (
+              <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
+            )
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            isLoggedIn && isAdmin ? (
+              <Layout>
+                <AdminManagement />
               </Layout>
             ) : (
               <Navigate to={isLoggedIn ? "/" : "/sign-in"} replace />
@@ -156,6 +170,18 @@ const App = () => {
             isLoggedIn ? (
               <Layout>
                 <MyBookings />
+              </Layout>
+            ) : (
+              <Navigate to="/sign-in" replace />
+            )
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            isLoggedIn ? (
+              <Layout>
+                <Profile />
               </Layout>
             ) : (
               <Navigate to="/sign-in" replace />

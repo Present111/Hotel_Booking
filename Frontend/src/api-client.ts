@@ -13,6 +13,40 @@ import {
 import { BookingFormData } from "./forms/BookingForm/BookingForm";
 import { queryClient } from "./main";
 
+export type AdminUserPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role?: UserType["role"];
+  phone?: string;
+  isActive?: boolean;
+};
+
+export type AdminUserUpdatePayload = Partial<
+  Omit<AdminUserPayload, "password">
+> & {
+  password?: string;
+};
+
+export type AdminBookingPayload = {
+  userId: string;
+  hotelId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  adultCount: number;
+  childCount?: number;
+  checkIn: string;
+  checkOut: string;
+  totalCost: number;
+  status?: BookingType["status"];
+  paymentStatus?: BookingType["paymentStatus"];
+  paymentMethod?: string;
+  specialRequests?: string;
+};
+
 export const fetchCurrentUser = async (): Promise<UserType> => {
   const response = await axiosInstance.get("/api/users/me");
   return response.data;
@@ -237,6 +271,74 @@ export const fetchHotelBookings = async (
   hotelId: string
 ): Promise<BookingType[]> => {
   const response = await axiosInstance.get(`/api/bookings/hotel/${hotelId}`);
+  return response.data;
+};
+
+// Admin: manage users
+export const fetchAdminUsers = async (): Promise<UserType[]> => {
+  const response = await axiosInstance.get("/api/admin/users");
+  return response.data;
+};
+
+export const createAdminUser = async (payload: AdminUserPayload) => {
+  const response = await axiosInstance.post("/api/admin/users", payload);
+  return response.data;
+};
+
+export const updateAdminUser = async (
+  userId: string,
+  payload: AdminUserUpdatePayload
+) => {
+  const response = await axiosInstance.patch(`/api/admin/users/${userId}`, payload);
+  return response.data;
+};
+
+export const deleteAdminUser = async (userId: string) => {
+  const response = await axiosInstance.delete(`/api/admin/users/${userId}`);
+  return response.data;
+};
+
+// Admin: manage hotels
+export const deleteHotel = async (hotelId: string) => {
+  const response = await axiosInstance.delete(`/api/my-hotels/${hotelId}`);
+  return response.data;
+};
+
+// Admin: manage bookings
+export const fetchAllBookings = async () => {
+  const response = await axiosInstance.get("/api/bookings");
+  return response.data;
+};
+
+export const createAdminBooking = async (payload: AdminBookingPayload) => {
+  const response = await axiosInstance.post("/api/admin/bookings", payload);
+  return response.data;
+};
+
+export const updateBookingStatus = async (
+  bookingId: string,
+  payload: { status: string; cancellationReason?: string; refundAmount?: number }
+) => {
+  const response = await axiosInstance.patch(
+    `/api/bookings/${bookingId}/status`,
+    payload
+  );
+  return response.data;
+};
+
+export const updateBookingPayment = async (
+  bookingId: string,
+  payload: { paymentStatus: string; paymentMethod?: string }
+) => {
+  const response = await axiosInstance.patch(
+    `/api/bookings/${bookingId}/payment`,
+    payload
+  );
+  return response.data;
+};
+
+export const deleteBooking = async (bookingId: string) => {
+  const response = await axiosInstance.delete(`/api/bookings/${bookingId}`);
   return response.data;
 };
 

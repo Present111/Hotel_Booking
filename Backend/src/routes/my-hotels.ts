@@ -5,6 +5,8 @@ import multer from "multer";
 import { HotelType } from "../../../shared/types";
 import verifyToken, { authorizeRoles } from "../middleware/auth";
 import Hotel from "../models/hotel";
+import Booking from "../models/booking";
+import User from "../models/user";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -395,6 +397,88 @@ router.put(
         message: "Something went wrong",
         error: error instanceof Error ? error.message : "Unknown error",
       });
+    }
+  }
+);
+
+/**
+ * @swagger
+ * /api/my-hotels/{hotelId}:
+ *   delete:
+ *     summary: Delete a hotel (admin or owner)
+ *     tags: [MyHotels]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Hotel ID
+ *     responses:
+ *       200:
+ *         description: Hotel deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Hotel not found
+ *       500:
+ *         description: Unable to delete hotel
+ */
+router.delete(
+  "/:hotelId",
+  verifyToken,
+  authorizeRoles("hotel_owner", "admin"),
+  async (req: Request, res: Response) => {
+    try {
+      const { hotelId } = req.params;
+      const filter =
+        req.userRole === "admin"
+          ? { _id: hotelId }
+          : { _id: hotelId, userId: req.userId };
+
+      const hotel = await Hotel.findOne(filter);
+      if (!hotel) {
+        return res.status(404).json({ message: "Hotel not found" });
+      }
+
+      // Clean up related bookings and user analytics
+      const bookings = await Booking.find({ hotelId: hotel._id.toString() });
+      if (bookings.length > 0) {
+        // Decrement user booking stats
+        const userStats = bookings.reduce<Record<string, { count: number; revenue: number }>>(
+          (acc, booking) => {
+            if (!acc[booking.userId]) {
+              acc[booking.userId] = { count: 0, revenue: 0 };
+            }
+            acc[booking.userId].count += 1;
+            acc[booking.userId].revenue += booking.totalCost || 0;
+            return acc;
+          },
+          {}
+        );
+
+        await Promise.all(
+          Object.entries(userStats).map(([userId, stats]) =>
+            User.findByIdAndUpdate(userId, {
+              $inc: {
+                totalBookings: -stats.count,
+                totalSpent: -stats.revenue,
+              },
+            })
+          )
+        );
+
+        await Booking.deleteMany({ hotelId: hotel._id.toString() });
+      }
+
+      await Hotel.deleteOne({ _id: hotel._id });
+
+      res.status(200).json({ message: "Hotel deleted successfully" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Unable to delete hotel" });
     }
   }
 );
