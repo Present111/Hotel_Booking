@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import User from "../models/user";
 import jwt from "jsonwebtoken";
-import { check, validationResult } from "express-validator";
+import { check, validationResult, body } from "express-validator";
 import verifyToken from "../middleware/auth";
 
 const router = express.Router();
@@ -172,6 +172,76 @@ router.post(
     } catch (error) {
       console.log(error);
       res.status(500).send({ message: "Something went wrong" });
+    }
+  }
+);
+
+// Update current user profile
+router.patch(
+  "/me",
+  verifyToken,
+  [
+    body("email").optional().isEmail().withMessage("Email must be valid"),
+    body("firstName").optional().isString().withMessage("First name must be text"),
+    body("lastName").optional().isString().withMessage("Last name must be text"),
+    body("password")
+      .optional()
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+    body("phone").optional().isString(),
+    body("address.street").optional().isString(),
+    body("address.city").optional().isString(),
+    body("address.state").optional().isString(),
+    body("address.country").optional().isString(),
+    body("address.zipCode").optional().isString(),
+  ],
+  async (req: Request, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+      const user = await User.findById(req.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { email, firstName, lastName, password, phone, address } = req.body;
+
+      if (email && email !== user.email) {
+        const emailExists = await User.findOne({ email });
+        if (emailExists) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+        user.email = email;
+      }
+
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (password) user.password = password;
+      if (phone !== undefined) user.phone = phone;
+
+      if (address) {
+        user.address = {
+          street: address.street || "",
+          city: address.city || "",
+          state: address.state || "",
+          country: address.country || "",
+          zipCode: address.zipCode || "",
+        };
+      }
+
+      user.updatedAt = new Date();
+
+      await user.save();
+      const sanitizedUser = user.toObject();
+      delete (sanitizedUser as any).password;
+
+      res.status(200).json(sanitizedUser);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Unable to update profile" });
     }
   }
 );

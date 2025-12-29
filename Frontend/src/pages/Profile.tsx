@@ -1,11 +1,17 @@
-import { useQuery } from "react-query";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import { Mail, Shield, UserRound, Phone, MapPin, CalendarClock } from "lucide-react";
 import * as apiClient from "../api-client";
 import type { UserType } from "../../shared/types";
 import { Badge } from "../components/ui/badge";
 import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { useState, useEffect } from "react";
+import useAppContext from "../hooks/useAppContext";
 
 const Profile = () => {
+  const queryClient = useQueryClient();
+  const { showToast } = useAppContext();
   const { data, isLoading, error } = useQuery<UserType>(
     "profile",
     apiClient.fetchCurrentUser,
@@ -13,6 +19,74 @@ const Profile = () => {
       staleTime: 5 * 60 * 1000,
     }
   );
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "",
+    country: "",
+    zipCode: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (data) {
+      setForm({
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        street: data.address?.street || "",
+        city: data.address?.city || "",
+        state: data.address?.state || "",
+        country: data.address?.country || "",
+        zipCode: data.address?.zipCode || "",
+      });
+    }
+  }, [data]);
+
+  const updateProfile = useMutation(apiClient.updateCurrentUser, {
+    onSuccess: async () => {
+      showToast({
+        title: "Profile updated",
+        description: "Your profile changes have been saved.",
+        type: "SUCCESS",
+      });
+      setIsEditing(false);
+      await queryClient.invalidateQueries("profile");
+    },
+    onError: (err: any) => {
+      showToast({
+        title: "Update failed",
+        description: err?.message || "Unable to update profile.",
+        type: "ERROR",
+      });
+    },
+  });
+
+  const handleChange = (field: keyof typeof form, value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfile.mutate({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      phone: form.phone,
+      address: {
+        street: form.street,
+        city: form.city,
+        state: form.state,
+        country: form.country,
+        zipCode: form.zipCode,
+      },
+    });
+  };
 
   if (isLoading) {
     return (
@@ -142,6 +216,135 @@ const Profile = () => {
               )}
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Edit Profile</h2>
+              <p className="text-sm text-gray-600">
+                Update your personal information and contact details.
+              </p>
+            </div>
+            {!isEditing && (
+              <Button onClick={() => setIsEditing(true)} variant="default">
+                Edit
+              </Button>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-gray-600">First name</label>
+                <Input
+                  value={form.firstName}
+                  onChange={(e) => handleChange("firstName", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Last name</label>
+                <Input
+                  value={form.lastName}
+                  onChange={(e) => handleChange("lastName", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Email</label>
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => handleChange("email", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Phone</label>
+                <Input
+                  value={form.phone}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm text-gray-600">Street</label>
+                <Input
+                  value={form.street}
+                  onChange={(e) => handleChange("street", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">City</label>
+                <Input
+                  value={form.city}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">State</label>
+                <Input
+                  value={form.state}
+                  onChange={(e) => handleChange("state", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">Country</label>
+                <Input
+                  value={form.country}
+                  onChange={(e) => handleChange("country", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600">ZIP / Postal code</label>
+                <Input
+                  value={form.zipCode}
+                  onChange={(e) => handleChange("zipCode", e.target.value)}
+                  disabled={!isEditing}
+                />
+              </div>
+            </div>
+
+            {isEditing && (
+              <div className="flex gap-3">
+                <Button type="submit" disabled={updateProfile.isLoading}>
+                  {updateProfile.isLoading ? "Saving..." : "Save changes"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setIsEditing(false);
+                    if (data) {
+                      setForm({
+                        firstName: data.firstName || "",
+                        lastName: data.lastName || "",
+                        email: data.email || "",
+                        phone: data.phone || "",
+                        street: data.address?.street || "",
+                        city: data.address?.city || "",
+                        state: data.address?.state || "",
+                        country: data.address?.country || "",
+                        zipCode: data.address?.zipCode || "",
+                      });
+                    }
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </form>
         </CardContent>
       </Card>
     </div>

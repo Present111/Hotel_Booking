@@ -53,6 +53,26 @@ export const fetchCurrentUser = async (): Promise<UserType> => {
   return response.data;
 };
 
+export type UpdateProfilePayload = {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    zipCode?: string;
+  };
+};
+
+export const updateCurrentUser = async (payload: UpdateProfilePayload) => {
+  const response = await axiosInstance.patch("/api/users/me", payload);
+  return response.data;
+};
+
 export const register = async (formData: RegisterFormData) => {
   const response = await axiosInstance.post("/api/users/register", formData);
   const token = response.data?.token;
