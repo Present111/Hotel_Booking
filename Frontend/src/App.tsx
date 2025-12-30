@@ -21,6 +21,7 @@ import EditHotel from "./pages/EditHotel";
 import Home from "./pages/Home";
 import Info from "./pages/Info";
 import HelpCenter from "./pages/HelpCenter";
+import AIHotelWidget from "./components/AIHotelWidget";
 import MyBookings from "./pages/MyBookings";
 import MyHotels from "./pages/MyHotels";
 import AdminManagement from "./pages/AdminManagement";
@@ -244,6 +245,7 @@ const App = () => {
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      <AIHotelWidget />
       <Toaster />
     </Router>
   );
