@@ -18,7 +18,7 @@ import { Button } from "../components/ui/button";
 import { Loader2, CreditCard, Calendar, Users, AlertCircle } from "lucide-react";
 
 const Booking = () => {
-  const { stripePromise } = useAppContext();
+  const { stripePromise, currentUser: authUser } = useAppContext();
   const search = useSearchContext();
   const { hotelId } = useParams();
   const navigate = useNavigate();
@@ -84,6 +84,14 @@ const Booking = () => {
     }
   );
 
+  const effectiveRole =
+    currentUser?.role ||
+    authUser?.role ||
+    (localStorage.getItem("user_role") as "hotel_owner" | "admin" | "user" | null);
+
+  const isOwnerOrAdmin =
+    effectiveRole === "hotel_owner" || effectiveRole === "admin";
+
   if (isLoadingHotel || isLoadingUser) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -133,24 +141,26 @@ const Booking = () => {
         <div className="grid lg:grid-cols-[1fr_2fr] gap-8">
           {/* Booking Summary */}
           <div className="space-y-6">
-            <Card className="shadow-lg border-0 bg-white">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  Booking Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <BookingDetailsSummary
-                  checkIn={search.checkIn}
-                  checkOut={search.checkOut}
-                  adultCount={search.adultCount}
-                  childCount={search.childCount}
-                  numberOfNights={numberOfNights}
-                  hotel={hotel}
-                />
-              </CardContent>
-            </Card>
+            {!isOwnerOrAdmin && (
+              <Card className="shadow-lg border-0 bg-white">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    Booking Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BookingDetailsSummary
+                    checkIn={search.checkIn}
+                    checkOut={search.checkOut}
+                    adultCount={search.adultCount}
+                    childCount={search.childCount}
+                    numberOfNights={numberOfNights}
+                    hotel={hotel}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Hotel Info Card */}
             <Card className="shadow-lg border-0 bg-white">
