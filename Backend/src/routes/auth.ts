@@ -75,6 +75,12 @@ router.post(
         return res.status(400).json({ message: "Invalid Credentials" });
       }
 
+      if (user.isActive === false) {
+        return res
+          .status(403)
+          .json({ message: "This account has been suspended. Please contact support." });
+      }
+
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         return res.status(400).json({ message: "Invalid Credentials" });
@@ -150,11 +156,17 @@ router.post(
 router.get("/validate-token", verifyToken, async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.userId).select(
-      "firstName lastName email role"
+      "firstName lastName email role isActive"
     );
 
     if (!user) {
       return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.isActive === false) {
+      return res
+        .status(403)
+        .json({ message: "This account has been suspended. Please contact support." });
     }
 
     res.status(200).send({
