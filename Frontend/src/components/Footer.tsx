@@ -132,6 +132,14 @@ const Footer = () => {
                   Terms of Service
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/cookie-policy"
+                  className="text-primary-700 hover:text-primary-900 transition-colors"
+                >
+                  Cookie Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -151,7 +159,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-5 h-5 text-primary-500" />
-                <span className="text-primary-700">Hồ Chí Minh, Việt Nam</span>
+                <span className="text-primary-700">Ho Chi Minh, Viet Nam</span>
               </div>
             </div>
           </div>
@@ -161,24 +169,24 @@ const Footer = () => {
         <div className="border-t border-primary-200 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-primary-700 text-sm">© All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a
-              href="#"
+            <Link
+              to="/privacy-policy"
               className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Privacy Policy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/terms-of-service"
               className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Terms of Service
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              to="/cookie-policy"
               className="text-primary-700 hover:text-primary-900 text-sm transition-colors"
             >
               Cookie Policy
-            </a>
+            </Link>
           </div>
         </div>
       </div>

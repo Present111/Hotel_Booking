@@ -31,6 +31,7 @@ import Search from "./pages/Search";
 import SignIn from "./pages/SignIn";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
 
 const App = () => {
   const { isLoggedIn, currentUser } = useAppContext();
@@ -94,6 +95,14 @@ const App = () => {
           element={
             <Layout>
               <TermsOfService />
+            </Layout>
+          }
+        />
+        <Route
+          path="/cookie-policy"
+          element={
+            <Layout>
+              <CookiePolicy />
             </Layout>
           }
         />
