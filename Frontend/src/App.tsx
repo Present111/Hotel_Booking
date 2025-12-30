@@ -14,9 +14,13 @@ import AnalyticsDashboard from "./pages/AnalyticsDashboard";
 import ApiDocs from "./pages/ApiDocs";
 import ApiStatus from "./pages/ApiStatus";
 import Booking from "./pages/Booking";
+import BookingGuide from "./pages/BookingGuide";
+import CancellationPolicy from "./pages/CancellationPolicy";
 import Detail from "./pages/Detail";
 import EditHotel from "./pages/EditHotel";
 import Home from "./pages/Home";
+import Info from "./pages/Info";
+import HelpCenter from "./pages/HelpCenter";
 import MyBookings from "./pages/MyBookings";
 import MyHotels from "./pages/MyHotels";
 import AdminManagement from "./pages/AdminManagement";
@@ -24,6 +28,8 @@ import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Search from "./pages/Search";
 import SignIn from "./pages/SignIn";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 
 const App = () => {
   const { isLoggedIn, currentUser } = useAppContext();
@@ -47,6 +53,54 @@ const App = () => {
           element={
             <Layout>
               <Search />
+            </Layout>
+          }
+        />
+        <Route
+          path="/help-center"
+          element={
+            <Layout>
+              <HelpCenter />
+            </Layout>
+          }
+        />
+        <Route
+          path="/booking-guide"
+          element={
+            <Layout>
+              <BookingGuide />
+            </Layout>
+          }
+        />
+        <Route
+          path="/cancellation-policy"
+          element={
+            <Layout>
+              <CancellationPolicy />
+            </Layout>
+          }
+        />
+        <Route
+          path="/privacy-policy"
+          element={
+            <Layout>
+              <PrivacyPolicy />
+            </Layout>
+          }
+        />
+        <Route
+          path="/terms-of-service"
+          element={
+            <Layout>
+              <TermsOfService />
+            </Layout>
+          }
+        />
+        <Route
+          path="/info"
+          element={
+            <Layout>
+              <Info />
             </Layout>
           }
         />

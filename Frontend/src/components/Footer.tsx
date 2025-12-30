@@ -8,6 +8,7 @@ import {
   Phone,
   Twitter,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -61,44 +62,28 @@ const Footer = () => {
             <h3 className="text-lg font-semibold">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Home
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/search"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Hotels
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/info"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
-                  Destinations
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-primary-700 hover:text-primary-900 transition-colors"
-                >
-                  About Us
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-primary-700 hover:text-primary-900 transition-colors"
-                >
-                  Contact
-                </a>
+                  Info
+                </Link>
               </li>
             </ul>
           </div>
@@ -108,44 +93,44 @@ const Footer = () => {
             <h3 className="text-lg font-semibold">Support</h3>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/help-center"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Help Center
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/booking-guide"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Booking Guide
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/cancellation-policy"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Cancellation Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/privacy-policy"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Privacy Policy
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="#"
+                <Link
+                  to="/terms-of-service"
                   className="text-primary-700 hover:text-primary-900 transition-colors"
                 >
                   Terms of Service
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
