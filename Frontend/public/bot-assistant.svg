@@ -1,0 +1,27 @@
+<svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bot-body" x1="20" y1="12" x2="52" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6FB4"/>
+      <stop offset="0.5" stop-color="#6D57FF"/>
+      <stop offset="1" stop-color="#9B7CFF"/>
+    </linearGradient>
+    <linearGradient id="bot-face" x1="20" y1="24" x2="52" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E1B3A"/>
+      <stop offset="1" stop-color="#2A1F63"/>
+    </linearGradient>
+    <linearGradient id="bot-head" x1="24" y1="10" x2="48" y2="22" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFCF4B"/>
+      <stop offset="1" stop-color="#FF9B3F"/>
+    </linearGradient>
+  </defs>
+  <rect x="18" y="14" width="36" height="48" rx="14" fill="url(#bot-body)"/>
+  <rect x="22" y="12" width="28" height="12" rx="6" fill="url(#bot-head)"/>
+  <rect x="22" y="26" width="28" height="20" rx="8" fill="url(#bot-face)"/>
+  <rect x="30" y="28" width="4" height="12" rx="2" fill="#2FB2FF"/>
+  <rect x="38" y="28" width="4" height="12" rx="2" fill="#2FB2FF"/>
+  <rect x="32" y="46" width="8" height="6" rx="3" fill="#22163B"/>
+  <rect x="14" y="20" width="6" height="16" rx="3" fill="#FF6FB4"/>
+  <rect x="52" y="20" width="6" height="16" rx="3" fill="#FF6FB4"/>
+  <circle cx="17" cy="18" r="3" fill="#FF6FB4"/>
+  <circle cx="55" cy="18" r="3" fill="#FF6FB4"/>
+</svg>
