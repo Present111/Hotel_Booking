@@ -1,6 +1,5 @@
 import {
   Activity,
-  Calendar,
   Edit,
   Plus,
   Trash,
@@ -13,7 +12,6 @@ import { useMutation, useQueryClient } from "react-query";
 import { Link } from "react-router-dom";
 import * as apiClient from "../api-client";
 import type {
-  AdminBookingPayload,
   AdminUserPayload,
   AdminUserUpdatePayload,
 } from "../api-client";
@@ -58,20 +56,6 @@ const AdminManagement = () => {
   const [drafts, setDrafts] = useState<Record<string, AdminUserUpdatePayload>>(
     {}
   );
-  const [newBooking, setNewBooking] = useState<AdminBookingPayload>({
-    userId: "",
-    hotelId: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    adultCount: 1,
-    childCount: 0,
-    checkIn: "",
-    checkOut: "",
-    totalCost: 0,
-    status: "confirmed",
-    paymentStatus: "paid",
-  });
   const [hotelSearch, setHotelSearch] = useState("");
   const [userSearch, setUserSearch] = useState("");
   const [bookingSearch, setBookingSearch] = useState("");
@@ -189,16 +173,6 @@ const AdminManagement = () => {
     onError: () => toastError("Could not delete user"),
   });
 
-  const createBooking = useMutation(apiClient.createAdminBooking, {
-    onSuccess: () => {
-      qc.invalidateQueries("admin-bookings");
-      qc.invalidateQueries("admin-hotels");
-      setNewBooking((prev) => ({ ...prev, checkIn: "", checkOut: "" }));
-      toastOk("Booking created");
-    },
-    onError: () => toastError("Could not create booking"),
-  });
-
   const updateBookingStatus = useMutation(
     ({ id, status }: { id: string; status: BookingType["status"] }) =>
       apiClient.updateBookingStatus(id, { status }),
@@ -245,18 +219,6 @@ const AdminManagement = () => {
     const updates = drafts[id];
     if (!updates || Object.keys(updates).length === 0) return;
     updateUser.mutate({ userId: id, updates });
-  };
-
-  const onCreateBooking = () => {
-    if (!newBooking.userId || !newBooking.hotelId || !newBooking.checkIn || !newBooking.checkOut) {
-      return toastError("User, hotel, and dates are required");
-    }
-    createBooking.mutate({
-      ...newBooking,
-      adultCount: Number(newBooking.adultCount),
-      childCount: Number(newBooking.childCount),
-      totalCost: Number(newBooking.totalCost),
-    });
   };
 
   return (
@@ -540,116 +502,6 @@ const AdminManagement = () => {
 
       {tab === "bookings" && (
         <div className="space-y-4">
-          <div className="border rounded p-4 space-y-3">
-            <div className="font-semibold flex items-center gap-2"><Calendar className="w-4 h-4" />Manual booking</div>
-            <div className="grid md:grid-cols-3 gap-3 text-sm">
-              <div>
-                <Label>User</Label>
-                <select
-                  value={newBooking.userId}
-                  onChange={(e) => setNewBooking({ ...newBooking, userId: e.target.value })}
-                  className="w-full border rounded px-2 py-2"
-                >
-                  <option value="">Select user</option>
-                  {(usersQuery.data || []).map((u) => (
-                    <option key={u._id} value={u._id}>
-                      {u.firstName} {u.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label>Hotel</Label>
-                <select
-                  value={newBooking.hotelId}
-                  onChange={(e) => setNewBooking({ ...newBooking, hotelId: e.target.value })}
-                  className="w-full border rounded px-2 py-2"
-                >
-                  <option value="">Select hotel</option>
-                  {(hotelsQuery.data || []).map((h) => (
-                    <option key={h._id} value={h._id}>
-                      {h.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input value={newBooking.email} onChange={(e) => setNewBooking({ ...newBooking, email: e.target.value })} />
-              </div>
-              <div>
-                <Label>First</Label>
-                <Input value={newBooking.firstName} onChange={(e) => setNewBooking({ ...newBooking, firstName: e.target.value })} />
-              </div>
-              <div>
-                <Label>Last</Label>
-                <Input value={newBooking.lastName} onChange={(e) => setNewBooking({ ...newBooking, lastName: e.target.value })} />
-              </div>
-              <div>
-                <Label>Adults</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={newBooking.adultCount}
-                  onChange={(e) => setNewBooking({ ...newBooking, adultCount: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Children</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={newBooking.childCount}
-                  onChange={(e) => setNewBooking({ ...newBooking, childCount: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Check-in</Label>
-                <Input type="date" value={newBooking.checkIn} onChange={(e) => setNewBooking({ ...newBooking, checkIn: e.target.value })} />
-              </div>
-              <div>
-                <Label>Check-out</Label>
-                <Input type="date" value={newBooking.checkOut} onChange={(e) => setNewBooking({ ...newBooking, checkOut: e.target.value })} />
-              </div>
-              <div>
-                <Label>Total</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={newBooking.totalCost}
-                  onChange={(e) => setNewBooking({ ...newBooking, totalCost: Number(e.target.value) })}
-                />
-              </div>
-              <div>
-                <Label>Status</Label>
-                <select
-                  value={newBooking.status}
-                  onChange={(e) => setNewBooking({ ...newBooking, status: e.target.value as BookingType["status"] })}
-                  className="w-full border rounded px-2 py-2"
-                >
-                  {statusOptions.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label>Payment</Label>
-                <select
-                  value={newBooking.paymentStatus}
-                  onChange={(e) => setNewBooking({ ...newBooking, paymentStatus: e.target.value as BookingType["paymentStatus"] })}
-                  className="w-full border rounded px-2 py-2"
-                >
-                  {paymentOptions.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <Button onClick={onCreateBooking} className="w-full">
-              <Plus className="w-4 h-4 mr-1" />Create booking
-            </Button>
-          </div>
-
           <div className="border rounded p-4">
             <div className="font-semibold mb-2 flex items-center gap-2"><Activity className="w-4 h-4" />All bookings</div>
             {bookingsQuery.isLoading ? (
